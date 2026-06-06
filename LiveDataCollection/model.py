@@ -1,7 +1,7 @@
 # DEEPCRAFT Studio 5.12.5418.0+7793ebcc9f383586f202c2d2f6eafbd7ebe6519d
 # Copyright © 2023- Imagimob AB, All Rights Reserved.
 # 
-# Generated at 06/06/2026 14:51:44 UTC. Any changes will be lost.
+# Generated at 06/06/2026 15:51:11 UTC. Any changes will be lost.
 # 
 # Layer                          Shape           Type       Function
 # Sliding Window (data points)   [512]           float      dequeue

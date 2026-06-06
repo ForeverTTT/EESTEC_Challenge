@@ -19,9 +19,6 @@
           </Axis>
         </Shape>
       </Track>
-      <Track name="uu" type="labelcsv">
-        <PayloadFile>uu.label</PayloadFile>
-      </Track>
     </Tracks>
   </Timeline>
 </ImagimobStudio>

@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <ImagimobStudio version="1.1.0">
-  <Job id="ce069b4b-61b7-11f1-985f-eba498db657f" />
+  <Job id="27a8a317-618d-11f1-9793-679a32a72ce7" />
   <ProjectType>Classification</ProjectType>
   <ProjectId>b5f45989-7d86-48c3-9866-da1431a74086</ProjectId>
   <UnitLibrary>
     <Directory>
     </Directory>
   </UnitLibrary>
-  <Preprocessor inshape="[2]" intype="Float32" infreq="16000" outshape="[50,30]" outtype="Float32">
+  <Preprocessor inshape="[1]" intype="Float32" infreq="1" outshape="[50,30]" outtype="Float32">
     <Unit id="Core.Queues.SlidingWindow">
       <Argument param="input" type="String">data</Argument>
       <Argument param="time_input" type="String">time</Argument>
@@ -65,7 +65,7 @@
   </Preprocessor>
   <ModelFactory>
     <Epochs>10</Epochs>
-    <BatchSize>2</BatchSize>
+    <BatchSize>16</BatchSize>
     <SplitCount>16</SplitCount>
     <Patience>20</Patience>
     <AppendModels>False</AppendModels>
@@ -82,7 +82,7 @@
     <LearnRate>Low</LearnRate>
     <RegularizationFactor>Mid</RegularizationFactor>
     <LastNetworkInputShape>[50,30]</LastNetworkInputShape>
-    <LastClassCount>5</LastClassCount>
+    <LastClassCount>1</LastClassCount>
     <Optimizer>
       <LearningRate>0.001</LearningRate>
       <WeightDecay>0.0001</WeightDecay>
@@ -93,10 +93,10 @@
     </BuildSteps>
   </ModelFactory>
   <Models>
-    <Model name="conv1d-medium-balanced-0" id="8e332215-4fb4-4af9-bfa1-dd8a5c1afa6d">
+    <Model name="conv1d-medium-balanced-0" id="79c08e67-d9f3-44a6-a96f-406084e5383c">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
-      <BatchSize>2</BatchSize>
+      <BatchSize>16</BatchSize>
       <SplitCount>16</SplitCount>
       <Patience>20</Patience>
       <TrainingEnvironment>
@@ -199,7 +199,7 @@
         </Unit>
         <Unit id="Core.Layers.GlobalAveragePool1D" />
         <Unit id="Core.Layers.Dense">
-          <Argument param="units" type="Int32">5</Argument>
+          <Argument param="units" type="Int32">2</Argument>
           <Argument param="use_bias" type="Boolean">True</Argument>
           <Argument param="activation" type="String">linear</Argument>
         </Unit>
@@ -218,7 +218,7 @@
         <SymbolWeight symbol="South" weight="1" />
         <SymbolWeight symbol="West" weight="1" />
       </SymbolWeights>
-      <Preprocessor override="False" inshape="[2]" intype="Float32" infreq="0" outshape="[50,30]" outtype="Float32">
+      <Preprocessor override="False" inshape="[1]" intype="Float32" infreq="1" outshape="[50,30]" outtype="Float32">
         <Unit id="Core.Queues.SlidingWindow">
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
@@ -274,12 +274,12 @@
           <Argument param="time_output" type="String">time</Argument>
         </Unit>
       </Preprocessor>
-      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="0" outshape="[128,3]" outtype="Float32" />
+      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[10]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-medium-balanced-1" id="84900c65-5068-4f47-87db-b4c16c56db2d">
+    <Model name="conv1d-medium-balanced-1" id="ad1980ed-f8dc-4494-a1a5-2b80dc042085">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
-      <BatchSize>2</BatchSize>
+      <BatchSize>16</BatchSize>
       <SplitCount>16</SplitCount>
       <Patience>20</Patience>
       <TrainingEnvironment>
@@ -382,7 +382,7 @@
         </Unit>
         <Unit id="Core.Layers.GlobalAveragePool1D" />
         <Unit id="Core.Layers.Dense">
-          <Argument param="units" type="Int32">5</Argument>
+          <Argument param="units" type="Int32">2</Argument>
           <Argument param="use_bias" type="Boolean">True</Argument>
           <Argument param="activation" type="String">linear</Argument>
         </Unit>
@@ -401,7 +401,7 @@
         <SymbolWeight symbol="South" weight="1" />
         <SymbolWeight symbol="West" weight="1" />
       </SymbolWeights>
-      <Preprocessor override="False" inshape="[2]" intype="Float32" infreq="0" outshape="[50,30]" outtype="Float32">
+      <Preprocessor override="False" inshape="[1]" intype="Float32" infreq="1" outshape="[50,30]" outtype="Float32">
         <Unit id="Core.Queues.SlidingWindow">
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
@@ -457,12 +457,12 @@
           <Argument param="time_output" type="String">time</Argument>
         </Unit>
       </Preprocessor>
-      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="0" outshape="[128,3]" outtype="Float32" />
+      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[10]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-medium-balanced-2" id="04431c88-e653-4417-80b1-2c0999e3926d">
+    <Model name="conv1d-medium-balanced-2" id="a4abea6f-566c-428e-bec3-ffc107d90a50">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
-      <BatchSize>2</BatchSize>
+      <BatchSize>16</BatchSize>
       <SplitCount>16</SplitCount>
       <Patience>20</Patience>
       <TrainingEnvironment>
@@ -565,7 +565,7 @@
         </Unit>
         <Unit id="Core.Layers.GlobalAveragePool1D" />
         <Unit id="Core.Layers.Dense">
-          <Argument param="units" type="Int32">5</Argument>
+          <Argument param="units" type="Int32">2</Argument>
           <Argument param="use_bias" type="Boolean">True</Argument>
           <Argument param="activation" type="String">linear</Argument>
         </Unit>
@@ -584,7 +584,7 @@
         <SymbolWeight symbol="South" weight="1" />
         <SymbolWeight symbol="West" weight="1" />
       </SymbolWeights>
-      <Preprocessor override="False" inshape="[2]" intype="Float32" infreq="0" outshape="[50,30]" outtype="Float32">
+      <Preprocessor override="False" inshape="[1]" intype="Float32" infreq="1" outshape="[50,30]" outtype="Float32">
         <Unit id="Core.Queues.SlidingWindow">
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
@@ -640,12 +640,12 @@
           <Argument param="time_output" type="String">time</Argument>
         </Unit>
       </Preprocessor>
-      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="0" outshape="[128,3]" outtype="Float32" />
+      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[10]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-medium-balanced-3" id="98cb9a7e-459f-4999-927c-5e216c9f2178">
+    <Model name="conv1d-medium-balanced-3" id="80025e51-7249-41eb-abcb-d433d2f2885a">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
-      <BatchSize>2</BatchSize>
+      <BatchSize>16</BatchSize>
       <SplitCount>16</SplitCount>
       <Patience>20</Patience>
       <TrainingEnvironment>
@@ -748,7 +748,7 @@
         </Unit>
         <Unit id="Core.Layers.GlobalAveragePool1D" />
         <Unit id="Core.Layers.Dense">
-          <Argument param="units" type="Int32">5</Argument>
+          <Argument param="units" type="Int32">2</Argument>
           <Argument param="use_bias" type="Boolean">True</Argument>
           <Argument param="activation" type="String">linear</Argument>
         </Unit>
@@ -767,7 +767,7 @@
         <SymbolWeight symbol="South" weight="1" />
         <SymbolWeight symbol="West" weight="1" />
       </SymbolWeights>
-      <Preprocessor override="False" inshape="[2]" intype="Float32" infreq="0" outshape="[50,30]" outtype="Float32">
+      <Preprocessor override="False" inshape="[1]" intype="Float32" infreq="1" outshape="[50,30]" outtype="Float32">
         <Unit id="Core.Queues.SlidingWindow">
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
@@ -823,10 +823,10 @@
           <Argument param="time_output" type="String">time</Argument>
         </Unit>
       </Preprocessor>
-      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="0" outshape="[128,3]" outtype="Float32" />
+      <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[10]" outtype="Float32" />
     </Model>
   </Models>
-  <Database balance="LabelCount" redistributionScope="Everything">
+  <Database balance="AnnotatedLength" redistributionScope="Everything">
     <SymbolMap>
       <Symbol name="unlabeled" id="0" weight="1" />
       <Symbol name="East" id="1" weight="1" />
@@ -834,87 +834,86 @@
       <Symbol name="South" id="3" weight="1" />
       <Symbol name="West" id="4" weight="1" />
     </SymbolMap>
-    <DataSet id="unassigned" targetSize="0" labels="Unassigned" />
-    <DataSet id="train" targetSize="0.7240265502025899" labels="Complete">
-      <Session name="east1" sessionId="7dbdf317-9e19-4890-bcd0-37afec7c0f86" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849531764899086" start="0" length="26.176">../LiveDataCollection/east1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+    <DataSet id="unassigned" targetSize="0" labels="Unassigned">
+      <Session name="east1" sessionId="7dbdf317-9e19-4890-bcd0-37afec7c0f86" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849520651998475" start="0" length="26.176">../LiveDataCollection/east1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
         <SessionFile>../LiveDataCollection/east1/east1.imsession</SessionFile>
-        <LabelFile modified="5250849556406367480">../LiveDataCollection/east1/Live-Labeling.label</LabelFile>
+        <LabelFile modified="5250849552772446093">../LiveDataCollection/east1/Live-Labeling.label</LabelFile>
         <Labels>
           <Label count="1" length="26.0598618">East</Label>
         </Labels>
         <CustomColumnValues />
       </Session>
-      <Session name="nord1" sessionId="8d0699a2-35f6-4424-a33d-d268a0327784" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849531765029075" start="0" length="26.112">../LiveDataCollection/nord1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+      <Session name="east2" sessionId="c4fc6c32-815f-469d-8ec2-f02afb4ecec3" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849553950520982" start="0" length="15.04">../LiveDataCollection/east2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+        <SessionFile>../LiveDataCollection/east2/east2.imsession</SessionFile>
+        <LabelFile modified="5250849553950308852">../LiveDataCollection/east2/Live-Labeling.label</LabelFile>
+        <Labels>
+          <Label count="1" length="14.496">East</Label>
+        </Labels>
+        <CustomColumnValues />
+      </Session>
+      <Session name="nord1" sessionId="8d0699a2-35f6-4424-a33d-d268a0327784" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849524435197639" start="0" length="26.112">../LiveDataCollection/nord1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
         <SessionFile>../LiveDataCollection/nord1/nord1.imsession</SessionFile>
-        <LabelFile modified="5250849556406467456">../LiveDataCollection/nord1/Live-Labeling.label</LabelFile>
+        <LabelFile modified="5250849552612885308">../LiveDataCollection/nord1/Live-Labeling.label</LabelFile>
         <Labels>
           <Label count="1" length="26.008087">Nord</Label>
         </Labels>
         <CustomColumnValues />
       </Session>
-      <Session name="south2" sessionId="60bea042-d3fa-432b-be8b-e921f96d0589" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849556406647453" start="0" length="12.736">../LiveDataCollection/south2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+      <Session name="nord2" sessionId="77a91173-9d86-4c4b-a9df-d5976c212e4e" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849551102484589" start="0" length="16.16">../LiveDataCollection/nord2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+        <SessionFile>../LiveDataCollection/nord2/nord2.imsession</SessionFile>
+        <LabelFile modified="5250849551101990477">../LiveDataCollection/nord2/Live-Labeling.label</LabelFile>
+        <Labels>
+          <Label count="1" length="16.1430819">Nord</Label>
+        </Labels>
+        <CustomColumnValues />
+      </Session>
+      <Session name="south1" sessionId="fb13e4b2-4d16-4f7d-a970-579ea0b5a162" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="LabelsPartialOutsideData">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849523850382447" start="0" length="26.368">../LiveDataCollection/south1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+        <SessionFile>../LiveDataCollection/south1/south1.imsession</SessionFile>
+        <LabelFile modified="5250849539384024296">../LiveDataCollection/south1/Live-Labeling.label</LabelFile>
+        <Labels>
+          <Label count="1" length="26.368">South</Label>
+        </Labels>
+        <CustomColumnValues />
+      </Session>
+      <Session name="south2" sessionId="60bea042-d3fa-432b-be8b-e921f96d0589" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849552132702050" start="0" length="12.736">../LiveDataCollection/south2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
         <SessionFile>../LiveDataCollection/south2/south2.imsession</SessionFile>
-        <LabelFile modified="5250849556406587456">../LiveDataCollection/south2/Live-Labeling.label</LabelFile>
+        <LabelFile modified="5250849554199034372">../LiveDataCollection/south2/Live-Labeling.label</LabelFile>
         <Labels>
           <Label count="1" length="12.6500768">South</Label>
         </Labels>
         <CustomColumnValues />
       </Session>
-      <Session name="west2" sessionId="a3a4f4c0-3b95-434f-8951-67586413018f" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849556406757496" start="0" length="18.624">../LiveDataCollection/west2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+      <Session name="west1" sessionId="77f58d8e-30f5-4029-9932-aa077ab3028b" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849515585161319" start="0" length="23.904">../LiveDataCollection/west1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
+        <SessionFile>../LiveDataCollection/west1/west1.imsession</SessionFile>
+        <LabelFile modified="5250849554137173252">../LiveDataCollection/west1/Live-Labeling.label</LabelFile>
+        <Labels>
+          <Label count="1" length="23.7603555">West</Label>
+        </Labels>
+        <CustomColumnValues />
+      </Session>
+      <Session name="west2" sessionId="a3a4f4c0-3b95-434f-8951-67586413018f" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="False" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
+        <DataFile shape="[2]" samplerate="16000" modified="5250849555241681652" start="0" length="18.624">../LiveDataCollection/west2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
         <SessionFile>../LiveDataCollection/west2/west2.imsession</SessionFile>
-        <LabelFile modified="5250849556406687486">../LiveDataCollection/west2/Live-Labeling.label</LabelFile>
+        <LabelFile modified="5250849555241440683">../LiveDataCollection/west2/Live-Labeling.label</LabelFile>
         <Labels>
           <Label count="1" length="17.2882703">West</Label>
         </Labels>
         <CustomColumnValues />
       </Session>
     </DataSet>
-    <DataSet id="validation" targetSize="0.26596264564486694" labels="Complete">
-      <Session name="east2" sessionId="c4fc6c32-815f-469d-8ec2-f02afb4ecec3" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849556406447483" start="0" length="15.04">../LiveDataCollection/east2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
-        <SessionFile>../LiveDataCollection/east2/east2.imsession</SessionFile>
-        <LabelFile modified="5250849556406387475">../LiveDataCollection/east2/Live-Labeling.label</LabelFile>
-        <Labels>
-          <Label count="1" length="14.496">East</Label>
-        </Labels>
-        <CustomColumnValues />
-      </Session>
-      <Session name="south1" sessionId="fb13e4b2-4d16-4f7d-a970-579ea0b5a162" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849531765149109" start="0" length="26.368">../LiveDataCollection/south1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
-        <SessionFile>../LiveDataCollection/south1/south1.imsession</SessionFile>
-        <LabelFile modified="5250849556406567463">../LiveDataCollection/south1/Live-Labeling.label</LabelFile>
-        <Labels>
-          <Label count="1" length="26.1754552">South</Label>
-        </Labels>
-        <CustomColumnValues />
-      </Session>
-      <Session name="nord2" sessionId="77a91173-9d86-4c4b-a9df-d5976c212e4e" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849556406547456" start="0" length="16.16">../LiveDataCollection/nord2/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
-        <SessionFile>../LiveDataCollection/nord2/nord2.imsession</SessionFile>
-        <LabelFile modified="5250849556406487460">../LiveDataCollection/nord2/Live-Labeling.label</LabelFile>
-        <Labels>
-          <Label count="1" length="16.1430819">Nord</Label>
-        </Labels>
-        <CustomColumnValues />
-      </Session>
-      <Session name="west1" sessionId="77f58d8e-30f5-4029-9932-aa077ab3028b" originalSessionId="00000000-0000-0000-0000-000000000000" ownerLocked="True" labelTrack="Live Labeling" dataTrack="Local Microphone Output Samples DataTrack" tags="None">
-        <DataFile shape="[2]" samplerate="16000" modified="5250849531765279077" start="0" length="23.904">../LiveDataCollection/west1/Local-Microphone-Output-Samples-DataTrack.wav</DataFile>
-        <SessionFile>../LiveDataCollection/west1/west1.imsession</SessionFile>
-        <LabelFile modified="5250849556406667458">../LiveDataCollection/west1/Live-Labeling.label</LabelFile>
-        <Labels>
-          <Label count="1" length="23.7603555">West</Label>
-        </Labels>
-        <CustomColumnValues />
-      </Session>
-    </DataSet>
+    <DataSet id="train" targetSize="0.7240265502025899" labels="Complete" />
+    <DataSet id="validation" targetSize="0.26596264564486694" labels="Complete" />
     <DataSet id="test" targetSize="0.010010804152543174" labels="Empty" />
   </Database>
   <PredefinedLabels>
-    <Label>{unlabeled}</Label>
+    <Label>undefined</Label>
     <Label>front</Label>
     <Label>back</Label>
     <Label>left</Label>

@@ -2,7 +2,7 @@
 <ImagimobStudio version="0.9">
   <Timeline id="fb13e4b2-4d16-4f7d-a970-579ea0b5a162">
     <Tracks>
-      <Track name="Local Microphone Output Samples DataTrack" type="audiowav" isLabelTrack="False" frequency="16000">
+      <Track name="Local Microphone Output Samples DataTrack" type="audiowav" isLabelTrack="False">
         <PayloadFile>Local-Microphone-Output-Samples-DataTrack.wav</PayloadFile>
         <Shape>
           <Axis name="Audio" size="2">

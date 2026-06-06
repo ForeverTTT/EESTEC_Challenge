@@ -55,3 +55,18 @@ MP3 files with the same base names are Wikimedia transcodes of the corresponding
 ## Practical note
 
 For the challenge, use one selected file consistently for every direction and for the final test. Start with `wws_fireengine_siren.ogg`; if it does not separate the directions well, try `wws_policecar_siren.ogg` next.
+
+## Synthetic beacon
+
+`chirp_beacon_600_3500hz_100ms_gap20ms_2min.wav`
+
+- Generated locally for the challenge.
+- Format: WAV PCM, 44.1 kHz, 16-bit, mono, 120 s.
+- Pattern: repeated linear chirp from 600 Hz to 3500 Hz, 100 ms chirp plus 20 ms gap.
+- Why: wideband, highly repeatable, and friendly to two-microphone direction learning.
+- Practical note: play it from one physical speaker only. Avoid stereo speaker pairs, surround effects, or laptop speakers spread far apart.
+
+`chirp_beacon_600_3500hz_100ms_gap20ms_2min.mp3`
+
+- Local MP3 transcode of the WAV beacon above.
+- Format: MP3, 44.1 kHz, mono, 192 kbps, about 120 s.

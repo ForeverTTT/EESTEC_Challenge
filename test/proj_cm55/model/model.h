@@ -1,15 +1,15 @@
 /*
-* ImagiNet Compiler 5.10.4880.0+131a2bec9927153a4680e62c816983072c846a58
+* ImagiNet Compiler 5.12.5418.0+7793ebcc9f383586f202c2d2f6eafbd7ebe6519d
 * Copyright © 2023- Imagimob AB, All Rights Reserved.
 * 
-* Generated at 04/23/2026 16:35:51 UTC. Any changes will be lost.
+* Generated at 06/06/2026 15:05:41 UTC. Any changes will be lost.
 * 
-* Model ID  02a284ef-b369-4bd0-b0f8-a1953f584b29
+* Model ID  212e298b-7862-4ecb-905c-63d72e60451c
 * 
 * Memory    Size                      Efficiency
-* Buffers   20485 bytes (RAM)         100 %
-* State     101600 bytes (RAM)        100 %
-* Readonly  33488 bytes (Flash)       100 %
+* Buffers   10256 bytes (RAM)         80 %
+* State     25992 bytes (RAM)         100 %
+* Readonly  48012 bytes (Flash)       100 %
 * 
 * Exported functions:
 * 
@@ -49,15 +49,15 @@
 * 		ethos-u-vela 4.5.0.
 * 	-> This code requires the following Modus Toolbox libraries (add them to your
 * 	project using the Library Manager):
-* 		ml-middleware 3.1.0.
-* 		ml-tflite-micro 3.1.0.
+* 		ml-middleware 3.2.0.
+* 		ml-tflite-micro 3.2.0.
 */
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "mtb_ml_model.h"
-#define IMAI_API_USER_DEFINED
+#define IMAI_API_QUEUE
 
 typedef int8_t q7_t;         // 8-bit fractional data type in Q1.7 format.
 typedef int16_t q15_t;       // 16-bit fractional data type in Q1.15 format.
@@ -66,7 +66,7 @@ typedef int64_t q63_t;       // 64-bit fractional data type in Q1.63 format.
 typedef float timestamp_t;
 
 // Model GUID (16 bytes)
-#define IMAI_MODEL_ID {0xef, 0x84, 0xa2, 0x02, 0x69, 0xb3, 0xd0, 0x4b, 0xb0, 0xf8, 0xa1, 0x95, 0x3f, 0x58, 0x4b, 0x29}
+#define IMAI_MODEL_ID {0x8b, 0x29, 0x2e, 0x21, 0x62, 0x78, 0xcb, 0x4e, 0x90, 0x5c, 0x63, 0xd7, 0x2e, 0x60, 0x45, 0x1c}
 
 
 // First nibble is bit encoding, second nibble is number of bytes
@@ -91,21 +91,34 @@ typedef float timestamp_t;
 #define IMAGINET_TYPES_UINT64	(0x78)
 
 
+#define IMAI_DEQUEUE_INPUTS (0)
+#define IMAI_DEQUEUE_OUTPUTS (1)
+#define IMAI_DEQUEUE_OUT_TYPE float
+#define IMAI_DEQUEUE_OUT_TYPE_ID IMAGINET_TYPES_FLOAT32
+#define IMAI_DEQUEUE_OUT_NO_COPY false
+
+#define IMAI_ENQUEUE_INPUTS (1)
+#define IMAI_ENQUEUE_OUTPUTS (0)
+#define IMAI_ENQUEUE_IN_TYPE float
+#define IMAI_ENQUEUE_IN_TYPE_ID IMAGINET_TYPES_FLOAT32
+
 // data_out [5] (20 bytes)
 #define IMAI_DATA_OUT_RANK (1)
 #define IMAI_DATA_OUT_SHAPE ((int[]){5})
 #define IMAI_DATA_OUT_COUNT (5)
+#define IMAI_DATA_OUT_BYTES (20)
 #define IMAI_DATA_OUT_TYPE float
 #define IMAI_DATA_OUT_TYPE_ID IMAGINET_TYPES_FLOAT32
 #define IMAI_DATA_OUT_SHIFT 0
 #define IMAI_DATA_OUT_OFFSET 0
-#define IMAI_DATA_OUT_SCALE 1
-#define IMAI_DATA_OUT_SYMBOLS {"{unlabeled}", "East", "South", "West", "Nord"}
+#define IMAI_DATA_OUT_SCALE 0
+#define IMAI_DATA_OUT_SYMBOLS {"unlabeled", "East", "Nord", "South", "West"}
 
 // data_in [2] (8 bytes)
 #define IMAI_DATA_IN_RANK (1)
 #define IMAI_DATA_IN_SHAPE ((int[]){2})
 #define IMAI_DATA_IN_COUNT (2)
+#define IMAI_DATA_IN_BYTES (8)
 #define IMAI_DATA_IN_TYPE float
 #define IMAI_DATA_IN_TYPE_ID IMAGINET_TYPES_FLOAT32
 #define IMAI_DATA_IN_SHIFT 0
@@ -113,7 +126,7 @@ typedef float timestamp_t;
 #define IMAI_DATA_IN_SCALE 1
 #define IMAI_DATA_IN_SYMBOLS { }
 
-#define IMAI_KEY_MAX (8)
+#define IMAI_KEY_MAX (28)
 
 // Return codes
 #define IMAI_RET_SUCCESS 0
@@ -133,31 +146,19 @@ void IMAI_finalize(void);
 int IMAI_soft_reset(void);
 int IMAI_init(void);
 
-// Call macros — invoke any exported function via a void* array
-#define IMAI_DEQUEUE_PTR(a) IMAI_dequeue((float *)(a)[0])
-#define IMAI_ENQUEUE_PTR(a) IMAI_enqueue((const float *)(a)[0])
-#define IMAI_FINALIZE_PTR(a) IMAI_finalize()
-#define IMAI_SOFT_RESET_PTR(a) IMAI_soft_reset()
-#define IMAI_INIT_PTR(a) IMAI_init()
-
 // Symbol IMAI_PROFILING must be defined to enable profiling of models
 // Symbol IMAI_PROFILING_LOG will enable printing the raw outputs of neural networks
 /// @brief This method will print the region profiling results
 void IMAI_print_region_profiling(void);
-#ifdef IMAI_PROFILING
-/// @brief Implement this method to perform profiling, should populate the value pointed to by val with the current tick count
-int IMAI_get_ticks(uint64_t *val);
-/// @brief Only re-implement this method if you want to perform custom profiling of regions in the generated code
-void IMAI_hook_region(bool entered, int32_t region_id);
-#endif
+/// @brief Point this function pointer to your custom tick count function. This should populate the value pointed to by val with the current tick count.
+extern int (*IMAI_get_ticks_ptr)(uint64_t*);
 
 /// @brief This method will print neural network inference profiling results
 void IMAI_mtb_models_profile_log();
 /// @brief This method will print neural network information
 void IMAI_mtb_models_print_info();
-#define IMAI_MAX_MTB_MODELS 4
-extern int32_t IMAI_mtb_models_count;
-extern mtb_ml_model_t* IMAI_mtb_models[IMAI_MAX_MTB_MODELS];
+extern uint8_t IMAI_mtb_models_count;
+extern mtb_ml_model_t* IMAI_mtb_models[];
 
 // Profiling regions
 #ifdef IMAI_PROFILING
@@ -166,15 +167,22 @@ extern mtb_ml_model_t* IMAI_mtb_models[IMAI_MAX_MTB_MODELS];
     	"PREPROCESSOR",\
     	"NETWORK",\
     }
-    typedef enum {
-    	IMAI_PREPROCESSOR = 0,
-    	IMAI_NETWORK = 1,
-    } IMAI_Region_t;
+    #define IMAI_REGIONS_NOTES {\
+    	NULL,\
+    	NULL,\
+    }
 #else
     #define IMAI_REGIONS_COUNT 0
     #define IMAI_REGIONS_NAMES {}
-    typedef enum {IMAI_REGIONS_EMPTY} IMAI_Region_t;
+    #define IMAI_REGIONS_NOTES {}
 #endif
+
+// Call macros — invoke any exported function via a void* array of arguments
+#define IMAI_DEQUEUE_PTR(a) IMAI_dequeue((float *)(a)[0])
+#define IMAI_ENQUEUE_PTR(a) IMAI_enqueue((const float *)(a)[0])
+#define IMAI_FINALIZE_PTR(a) IMAI_finalize()
+#define IMAI_SOFT_RESET_PTR(a) IMAI_soft_reset()
+#define IMAI_INIT_PTR(a) IMAI_init()
 
 typedef enum {
     IMAI_PARAM_UNDEFINED = 0,
@@ -183,6 +191,7 @@ typedef enum {
     IMAI_PARAM_REFERENCE = 3,
     IMAI_PARAM_HANDLE = 7,
     IMAI_PARAM_CALLBACK = 8,
+    IMAI_PARAM_OUTPUT_REF = 18,
 } IMAI_param_attrib;
 
 typedef char *label_text_t;
@@ -199,6 +208,7 @@ typedef struct {
     int32_t rank;
     IMAI_shape_dim *shape;
     int32_t count;
+    int32_t bytes;
     int32_t type_id;
     float frequency;
     int shift;
@@ -249,4 +259,9 @@ typedef struct {
 } IMAI_api_def;
 
 IMAI_api_def *IMAI_api(void);
+
+#define IMAI_INPUT_META_COUNT 1
+#define IMAI_OUTPUT_META_COUNT 1
+#define IMAI_INPUT_META(i) ((IMAI_param_def*)(&IMAI_api()->func_list[1].param_list[(i)]))
+#define IMAI_OUTPUT_META(i) ((IMAI_param_def*)(&IMAI_api()->func_list[0].param_list[(i)]))
 

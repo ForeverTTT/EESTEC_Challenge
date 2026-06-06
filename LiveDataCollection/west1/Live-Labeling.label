@@ -1,2 +1,4 @@
 Time(Seconds),Length(Seconds),Label(string),Confidence(double),Comment(string)
-0.0917192,23.7603555,West,1,
+0.1669813,6.173014200000001,West,1,
+8.652505000000001,6.173014200000001,West,1,
+17.0591826,6.173014200000001,West,1,

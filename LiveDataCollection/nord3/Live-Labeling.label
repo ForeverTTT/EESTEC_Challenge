@@ -1,0 +1,4 @@
+Time(Seconds),Length(Seconds),Label(string),Confidence(double),Comment(string)
+0.0971919,6.058748899999999,Nord,1,
+7.9751157,6.762979799999999,Nord,1,
+16.5169058,1.5478647999999993,Nord,1,

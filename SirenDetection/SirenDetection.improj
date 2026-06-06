@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <ImagimobStudio version="1.1.0">
-  <Job id="1c40d01e-61c8-11f1-b6bd-83b6c80a7c65" />
+  <Job id="c1062645-61cc-11f1-85a9-4f5310e56939" />
   <ProjectType>Classification</ProjectType>
   <ProjectId>b5f45989-7d86-48c3-9866-da1431a74086</ProjectId>
   <UnitLibrary>
@@ -57,7 +57,7 @@
       <Argument param="input" type="String">data</Argument>
       <Argument param="time_input" type="String">time</Argument>
       <Argument param="window_shape" type="Shape">[50,30]</Argument>
-      <Argument param="stride" type="Int32">180</Argument>
+      <Argument param="stride" type="Int32">1500</Argument>
       <Argument param="buffer_multiplier" type="Double">1</Argument>
       <Argument param="output" type="String">data</Argument>
       <Argument param="time_output" type="String">time</Argument>
@@ -93,7 +93,7 @@
     </BuildSteps>
   </ModelFactory>
   <Models>
-    <Model name="conv1d-small-balanced-0" id="7e1ad938-15cf-49a5-b71d-be28a7804750">
+    <Model name="conv1d-small-balanced-0" id="befdaeb7-2a0e-429a-a2b7-d39ae6e6d995">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
       <BatchSize>4</BatchSize>
@@ -102,7 +102,7 @@
       <TrainingEnvironment>
       </TrainingEnvironment>
       <Optimizer>
-        <LearningRate>0.0001</LearningRate>
+        <LearningRate>0.0003</LearningRate>
         <WeightDecay>0.001</WeightDecay>
       </Optimizer>
       <Network inshape="[50,30]" intype="Float32" infreq="0" outshape="[5]" outtype="Float32">
@@ -234,7 +234,7 @@
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
           <Argument param="window_shape" type="Shape">[50,30]</Argument>
-          <Argument param="stride" type="Int32">180</Argument>
+          <Argument param="stride" type="Int32">1500</Argument>
           <Argument param="buffer_multiplier" type="Double">1</Argument>
           <Argument param="output" type="String">data</Argument>
           <Argument param="time_output" type="String">time</Argument>
@@ -242,7 +242,7 @@
       </Preprocessor>
       <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[128,3]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-small-balanced-1" id="6f508a07-3c3f-4f79-8d59-c075044a6aec">
+    <Model name="conv1d-small-balanced-1" id="efd18304-94a1-482f-8467-ce06d005a443">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
       <BatchSize>4</BatchSize>
@@ -251,7 +251,7 @@
       <TrainingEnvironment>
       </TrainingEnvironment>
       <Optimizer>
-        <LearningRate>0.0001</LearningRate>
+        <LearningRate>0.0003</LearningRate>
         <WeightDecay>0.001</WeightDecay>
       </Optimizer>
       <Network inshape="[50,30]" intype="Float32" infreq="0" outshape="[5]" outtype="Float32">
@@ -383,7 +383,7 @@
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
           <Argument param="window_shape" type="Shape">[50,30]</Argument>
-          <Argument param="stride" type="Int32">180</Argument>
+          <Argument param="stride" type="Int32">1500</Argument>
           <Argument param="buffer_multiplier" type="Double">1</Argument>
           <Argument param="output" type="String">data</Argument>
           <Argument param="time_output" type="String">time</Argument>
@@ -391,7 +391,7 @@
       </Preprocessor>
       <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[128,3]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-small-balanced-2" id="05be29c9-f180-47ff-a1b1-925218e03530">
+    <Model name="conv1d-small-balanced-2" id="2184078b-5b6a-4cbf-85e4-060aca62a68c">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
       <BatchSize>4</BatchSize>
@@ -400,7 +400,7 @@
       <TrainingEnvironment>
       </TrainingEnvironment>
       <Optimizer>
-        <LearningRate>0.0001</LearningRate>
+        <LearningRate>0.0003</LearningRate>
         <WeightDecay>0.001</WeightDecay>
       </Optimizer>
       <Network inshape="[50,30]" intype="Float32" infreq="0" outshape="[5]" outtype="Float32">
@@ -532,7 +532,7 @@
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
           <Argument param="window_shape" type="Shape">[50,30]</Argument>
-          <Argument param="stride" type="Int32">180</Argument>
+          <Argument param="stride" type="Int32">1500</Argument>
           <Argument param="buffer_multiplier" type="Double">1</Argument>
           <Argument param="output" type="String">data</Argument>
           <Argument param="time_output" type="String">time</Argument>
@@ -540,7 +540,7 @@
       </Preprocessor>
       <Postprocessor override="False" inshape="[128,3]" intype="Float32" infreq="1" outshape="[128,3]" outtype="Float32" />
     </Model>
-    <Model name="conv1d-small-balanced-3" id="fc033c07-f031-47e4-81df-ff242e155dfa">
+    <Model name="conv1d-small-balanced-3" id="00221d18-e43f-4310-bb30-e92c59c2335b">
       <LossFunction>CategoricalCrossentropy</LossFunction>
       <Epochs>10</Epochs>
       <BatchSize>4</BatchSize>
@@ -549,7 +549,7 @@
       <TrainingEnvironment>
       </TrainingEnvironment>
       <Optimizer>
-        <LearningRate>0.0001</LearningRate>
+        <LearningRate>0.0003</LearningRate>
         <WeightDecay>0.001</WeightDecay>
       </Optimizer>
       <Network inshape="[50,30]" intype="Float32" infreq="0" outshape="[5]" outtype="Float32">
@@ -681,7 +681,7 @@
           <Argument param="input" type="String">data</Argument>
           <Argument param="time_input" type="String">time</Argument>
           <Argument param="window_shape" type="Shape">[50,30]</Argument>
-          <Argument param="stride" type="Int32">180</Argument>
+          <Argument param="stride" type="Int32">1500</Argument>
           <Argument param="buffer_multiplier" type="Double">1</Argument>
           <Argument param="output" type="String">data</Argument>
           <Argument param="time_output" type="String">time</Argument>

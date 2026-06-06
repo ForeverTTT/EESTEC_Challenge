@@ -80,7 +80,7 @@
 *  The threshold can be adjusted to increase or decrease the sensitivity of the
  * detection. A lower value will result in more false positives, while a higher
  * value will result in more false negatives. */
-#define OUTPUT_THRESHOLD_SCORE                  (0.6f)
+#define OUTPUT_THRESHOLD_SCORE                  (0.4f)
 
 #define PDM_PCM_GAIN                            (CY_PDM_PCM_SEL_GAIN_5DB)
 
@@ -304,7 +304,8 @@ cy_rslt_t pdm_data_process(void)
     int16_t best_label = 0;
     float max_score = 0.0f;
     float label_scores[IMAI_DATA_OUT_COUNT];
-    char *label_text[] = IMAI_DATA_OUT_SYMBOLS;
+    /* Remap display labels to match the physical board orientation. */
+    char *label_text[] = {"unlabeled", "West", "South", "Nord", "East"};
 
     /* Check if PDM PCM Data is ready from both channels */
     if (!pdm_pcm_flag_right || !pdm_pcm_flag_left)

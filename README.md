@@ -317,20 +317,13 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 ---
 
-## 核心亮点
+## 创新点
 
-### 1. 命令行一键编译烧录，摆脱 Eclipse IDE
+### 1. 不使用Eclipse, 运用脚本自动化编译烧录
 
-官方流程要求在 Eclipse ModusToolbox™ 中 Import 工程、Build、Program。我们分析了 `test/` 目录下的 **`Makefile`** 与 **`common.mk`**，发现 ModusToolbox 原生支持命令行构建：
+我们分析了 `test/` 目录下的 **`Makefile`** 与 **`common.mk`**，发现原项目支持命令行构建。我们将构建脚本写入 `./flash_model.sh` 中，通过运行以下指令即可完成编译与烧录，无需打开 Eclipse IDE：
 
 ```bash
-# 编译
-make -C test build TOOLCHAIN=GCC_ARM
-
-# 烧录
-make -C test program TOOLCHAIN=GCC_ARM
-
-# 或一条命令完成
 ./flash_model.sh
 ```
 

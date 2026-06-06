@@ -1,14 +1,12 @@
 <img src="./img/infineon_logo.png" alt="Infineon Logo" height="50"/>
 
-# Emergency Vehicle Direction of Arrival
+# Emergency Vehicle Direction Detection
 
 **基于 Infineon Hackathon Challenge 的扩展实现**
 
-> **Languages:** [English](./README_EN.md) · [中文](./README.md)
-
 本项目在 [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) 官方仓库的基础上进行了完整扩展。原始挑战要求使用 PSOC™ Edge E84 AI Kit 的双麦克风阵列，实时判断紧急车辆（警笛/救护车）声源来自 **East（东）、Nord（北）、South（南）、West（西）** 四个方向中的哪一个。
 
-我们在官方示例与 DEEPCRAFT™ Studio 工作流之上，完成了 **数据采集 → 模型微调 → 嵌入式部署 → 实时验证** 的全链路实现，并显著简化了开发流程：**无需打开 Eclipse ModusToolbox™ IDE，一条命令即可编译烧录，接上开发板即可运行。**
+我们在官方示例与 DEEPCRAFT™ Studio 工作流之上，完成了 **数据采集 → 模型微调 → 嵌入式部署 → 实时验证** 的全链路实现，并显著简化了开发流程：无需打开 Eclipse ModusToolbox™ IDE，一条命令即可编译烧录，接上开发板即可运行。
 
 ---
 
@@ -16,7 +14,7 @@
 
 - [项目背景](#项目背景)
 - [新增内容概览](#新增内容概览)
-- [目录结构说明](#目录结构说明)
+- [运行方式](#运行方式)
 - [方法与思路](#方法与思路)
   - [1. 问题定义与研究动机](#1-问题定义与研究动机)
   - [2. 总体方案](#2-总体方案)
@@ -27,7 +25,6 @@
   - [7. 实验结果与模型选择](#7-实验结果与模型选择)
   - [8. 小结](#8-小结)
 - [核心亮点](#核心亮点)
-- [快速开始](#快速开始)
 - [环境依赖](#环境依赖)
 - [参考资料](#参考资料)
 
@@ -43,12 +40,7 @@
 | 部署框架 | ModusToolbox™ + TensorFlow Lite for Microcontrollers |
 | 分类任务 | 5 类：East / Nord / South / West / unlabeled |
 
-原始仓库提供了部署示例与 Hackathon 材料，本项目的核心贡献在于：**自采集定向数据、微调 Conv1D 模型、并将完整部署流程脚本化**。
-
-相关 Hackathon 材料：
-- [Topic Introduction Slides](./topic_introduction.pdf)
-- [Challenge Introduction Slides](./challenge_introduction.pdf)
-- 原始 README 备份：[README_challenge.md](./README_challenge.md)
+原始仓库提供了部署示例与 Hackathon 材料，本项目在此基础上增加了：**自采集定向数据、微调 Conv1D 模型、并将完整部署流程脚本化**。
 
 ---
 
@@ -61,163 +53,62 @@
 | `finetuned_model/` | DEEPCRAFT 项目 | 最终选定的微调模型工程（含训练好的 `.h5` 权重及导出配置） |
 | `LiveDataCollection/` | DEEPCRAFT 项目 | 实时数据采集工程，含 40 条定向录音（每方向 10 条） |
 | `sounds/` | 音频资源 | 警笛/救护车参考音源，用于数据采集时播放 |
-| `test_models/` | 模型候选 | 训练过程中对比的其他模型版本 |
 | `test/` | 嵌入式工程 | 集成微调模型的 PSOC Edge 部署工程（ModusToolbox 三核结构） |
 | `flash_model.sh` | Shell 脚本 | 一键编译并烧录到开发板 |
 | `model.py` | Python | DEEPCRAFT 导出的预处理管线（Mel 特征提取，可在 PC 端复现） |
 | `test.py` | Python | 串口监听脚本，实时显示板端推理结果 |
-| `assets/` | 文档图片 | 方法论、训练曲线、混淆矩阵等可视化材料 |
 
 ---
 
-## 目录结构说明
+## 运行方式
 
-### `finetuned_model/` — 最终微调模型
+**环境：** ModusToolbox™（含 GCC_ARM）、PSOC™ Edge E84 AI Kit、Python 3.x。路径中不要有空格。
 
-DEEPCRAFT™ Studio 机器学习项目，基于官方 Siren Detection Accelerator 进行定向改造。
+### 1. 编译并烧录
 
-```
-finetuned_model/
-├── SirenDetection.improj      # DEEPCRAFT 工程文件
-├── Models/
-│   └── conv1d-medium-balanced-1/   # 最终选定模型
-│       ├── conv1d-medium-balanced-1.h5
-│       ├── conv1d-medium-balanced-1_min_max.md
-│       └── ...（测试输入/输出文件）
-└── metadata.json
-```
+官方文档默认通过 Eclipse ModusToolbox™ IDE 导入工程、点击 Build 和 Program 完成编译烧录。通过仔细观察源代码库，我们发现 `test/` 目录下已包含 ModusToolbox 原生的命令行构建体系，核心文件如下：
 
-- 包含完整的训练历史与模型导出配置
-- 最终部署到 `test/` 工程中的 C 代码即由此工程生成
-- 在 DEEPCRAFT Studio 中打开 `.improj` 可查看/继续训练
+- **`test/Makefile`** — 顶层 Application Makefile（`MTB_TYPE=APPLICATION`），定义三核子工程 `proj_cm33_s`、`proj_cm33_ns`、`proj_cm55`，并引入 ModusToolbox 的 `application.mk`
+- **`test/common.mk`** — 各子工程共享的配置，指定目标板 `TARGET=APP_KIT_PSE84_AI`、工具链 `TOOLCHAIN=GCC_ARM`、推理核心 `ML_DEEPCRAFT_CPU=cm55` 等
+- **`test/common_app.mk`** — 应用级路径与依赖配置
 
-### `LiveDataCollection/` — 实时数据采集
+这意味着无需打开 Eclipse，直接在终端执行 `make build` 和 `make program` 即可完成与 IDE 等价的编译与烧录。
 
-DEEPCRAFT Studio 实时数据采集 Starter Project，用于在采集的同时完成标注，大幅缩短数据准备时间。
+基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本，将上述两条 make 命令封装为一键操作。
 
-```
-LiveDataCollection/
-├── Main.imunit                # 数据采集图（PC 麦克风 + 串口设备双输入）
-├── LiveDataCollection.improjv
-├── model.py                   # 预处理参考实现
-├── east1 … east10             # 东方方向录音（10 条）
-├── nord1 … nord10             # 北方方向录音（10 条）
-├── south1 … south10           # 南方方向录音（10 条）
-├── west1 … west10             # 西方方向录音（10 条）
-└── conv1d-small-balanced-1/   # 早期训练模型快照
-```
-
-**采集流程：**
-1. 在 `sounds/` 中选取统一音源（推荐 `chirp_beacon` 或 `wws_fireengine_siren.ogg`）
-2. 将扬声器固定放置于某一方向（如 East）
-3. 在 DEEPCRAFT Studio 中运行 `Main.imunit`，边录音边点击方向标签按钮
-4. 保存 Session，重复其他三个方向
-
-各方向采集波形详见 [方法与思路 — 数据采集](#3-数据采集与标注策略) 中的 Figure 3–5。
-
-### `sounds/` — 参考音源
-
-用于数据采集的标准化播放音源，确保各方向录音使用相同信号，避免音源差异干扰方向学习。
-
-| 文件 | 说明 |
-|------|------|
-| `chirp_beacon_600_3500hz_100ms_gap20ms_2min.wav` | **推荐主音源**：本地生成的宽带 Chirp 信标，可重复性高，适合双麦 DOA |
-| `wws_fireengine_siren.ogg` | 消防车警笛（Work With Sounds, CC-BY-4.0） |
-| `wws_policecar_siren.ogg` | 警车双音警笛 |
-| `ambulance_sound_1/2.wav` | 短救护车音效（可循环播放） |
-| `SOURCES.md` | 完整来源、许可证与选用建议 |
-
-> **采集建议：** 同一实验全程使用同一音源；扬声器只用一个物理声源，避免立体声扩散；详见 `sounds/SOURCES.md`。
-
-### `test_models/` — 模型对比候选
-
-训练过程中保留的其他模型版本，用于横向对比：
-
-```
-test_models/
-├── conv1d-small-balanced-2/   # 候选模型 B
-└── conv1d-small-balanced-4/   # 候选模型 D（实际为 balanced-3 权重）
-```
-
-每个目录包含 `.h5` 权重、量化 min/max 配置及预处理/网络联调测试文件，便于在 DEEPCRAFT 中快速切换评估。
-
-### `test/` — 嵌入式部署工程
-
-基于 Infineon 官方 `PSOC_Edge_Machine_Learning_DEEPCRAFT_Deploy_Audio` 示例改造，已将微调后的模型与预处理代码集成其中。
-
-```
-test/
-├── Makefile              # 顶层 Application Makefile（MTB_TYPE=APPLICATION）
-├── common.mk             # 共享配置（TARGET、TOOLCHAIN、ML_DEEPCRAFT_CPU 等）
-├── common_app.mk         # 应用级公共配置
-├── proj_cm33_s/          # CM33 Secure 工程
-├── proj_cm33_ns/         # CM33 Non-Secure 工程（含 model.c/.h）
-├── proj_cm55/            # CM55 工程（默认推理核心，含 model.c/.h）
-├── bsps/                 # 板级支持包
-└── configs/              # 启动/签名配置
-```
-
-- 三核结构：CM33 Secure → CM33 Non-Secure → CM55，均 XIP 运行于外部 QSPI Flash
-- 默认在 **CM55** 上运行 INT8 量化推理（`ML_DEEPCRAFT_CPU=cm55`，`NN_TYPE=int8x8`）
-- 板端通过 UART（115200 baud）输出各方向置信度及最终预测
-
-### `flash_model.sh` — 一键编译烧录
+**运行方式**（需已安装 ModusToolbox™ 并配置好 `CY_TOOLS_DIR` 环境变量）：
 
 ```bash
-#!/usr/bin/env bash
-make -C test build TOOLCHAIN=GCC_ARM
-make -C test program TOOLCHAIN=GCC_ARM
+chmod +x flash_model.sh
+./flash_model.sh          # macOS / Linux
+bash flash_model.sh       # Windows (Git Bash)
 ```
 
-替代 Eclipse ModusToolbox™ 中的 Build + Program 操作。前提：已安装 ModusToolbox™ 并配置好 `CY_TOOLS_DIR` 环境变量。
+### 2. 监听推理结果
 
-### `model.py` — 预处理管线（Python）
-
-DEEPCRAFT Studio 自动生成的 Python 预处理代码，与板端 C 预处理逻辑 **完全一致**，可用于：
-
-- 在 PC 上离线验证特征提取结果
-- 理解/调试 Mel 频谱特征生成过程
-- 作为独立 Python 模块集成到其他测试脚本
-
-核心 `Model` 类实现队列式 API（`enqueue` / `dequeue`），流水线如下：
-
-```
-原始 PCM (2ch) → 512 点滑窗 → Hann 窗 → RDFT → Frobenius 范数
-→ 30 维 Mel 滤波器组 → Clip → Log → 50×30 特征矩阵
-```
-
-### `test.py` — 实时推理监控
-
-通过串口读取开发板 UART 输出，在终端实时显示当前预测方向及各类别置信度：
+1. 开发板 BOOT SW 拨至 ON，USB 连接 KitProg3
+2. 修改 `test.py` 中的串口路径（macOS: `/dev/cu.usbmodemXXX`，Windows: `COM3`）
+3. 运行 `python test.py`，终端实时显示方向预测：
 
 ```
 Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 ```
 
-**使用前修改串口路径：**
+4. 播放 `sounds/` 中的警笛音源，从不同方向靠近开发板即可测试
 
-```python
-PORT = "/dev/cu.usbmodem103"   # macOS
-# PORT = "COM3"                # Windows
-```
+### 3. 重新训练（可选）
 
-运行：
-
-```bash
-python test.py
-```
+用 DEEPCRAFT Studio 打开 `LiveDataCollection/` 采集数据 → 在 `finetuned_model/` 训练 → 导出 C 代码替换 `test/proj_cm55/model/` → 重新执行 `./flash_model.sh`。
 
 ---
 
 ## 方法与思路
 
-本节以技术报告的形式，阐述本项目从问题定义到模型部署的完整研究思路。文中所有实验截图均来自 DEEPCRAFT™ Studio 训练与评估界面，原始文件保存在 `assets/` 目录。
+本节以技术报告的形式，阐述本挑战从问题定义到模型部署的完整解题思路。
 
 ### 1. 问题定义与研究动机
 
-Infineon Hackathon 的核心任务是 **Emergency Vehicle Direction of Arrival（紧急车辆到达方向估计）**：给定 PSOC™ Edge E84 AI Kit 上双 PDM 麦克风采集的音频流，实时判断警笛/救护车声源来自 **East、Nord、South、West** 四个方向中的哪一个。
-
-与官方 Siren Detection Accelerator（二分类：有警笛 / 无警笛）不同，我们将问题重新形式化为 **五分类任务**——在四个方向之外额外引入 `unlabeled` 类，用于建模"无有效警笛信号"的场景。这一设计基于以下考虑：
+给定 PSOC™ Edge E84 AI Kit 上双 PDM 麦克风采集的音频流，实时判断警笛声源方向。我们将问题重新形式化为 **五分类任务**——在四个方向之外额外引入 `unlabeled` 类，用于建模"无有效警笛信号"的场景。这一设计基于以下考虑：
 
 1. **实际部署需求：** 车辆并非时刻处于警笛环境中，模型必须能区分"有方向性警笛"与"背景噪声"。
 2. **双麦 DOA 的信息载体：** 方向信息隐含于两路麦克风信号的 **时延差（ITD）** 与 **强度差（ILD）** 中，而非单一通道的频谱内容；因此需要可控、可重复的音源来激发这些差异。
@@ -460,58 +351,6 @@ make -C test program TOOLCHAIN=GCC_ARM
 ### 3. 完整可复现的数据→模型→部署链路
 
 从 `sounds/` 音源选择、`LiveDataCollection/` 采集、`finetuned_model/` 训练到 `test/` 部署，每个环节均有独立目录与文档，新成员可按 README 完整复现。
-
----
-
-## 快速开始
-
-### 前置条件
-
-1. 安装 [ModusToolbox™](https://www.infineon.com/modustoolbox)（含 GCC_ARM 工具链）
-2. 安装 [DEEPCRAFT™ Studio](https://softwaretools.infineon.com/assets/com.ifx.tb.tool.deepcraftstudio)（Windows）
-3. PSOC™ Edge E84 AI Kit 开发板 + USB 线
-4. Python 3.x（用于 `test.py`）
-
-> 路径中**不要包含空格**。ModusToolbox 工具包建议 3.6.0 或 3.8.0。
-
-### Step 1：克隆仓库
-
-```bash
-git clone <this-repo-url>
-cd EESTEC_Challenge
-```
-
-### Step 2：编译并烧录
-
-```bash
-chmod +x flash_model.sh
-./flash_model.sh
-```
-
-Windows（PowerShell / Git Bash）：
-
-```bash
-bash flash_model.sh
-```
-
-### Step 3：监听推理结果
-
-1. 开发板 BOOT SW 拨至 ON，USB 连接 KitProg3
-2. 修改 `test.py` 中的 `PORT` 为实际串口
-3. 运行：
-
-```bash
-python test.py
-```
-
-4. 播放 `sounds/` 中的警笛音源，从不同方向靠近开发板，观察终端输出
-
-### Step 4（可选）：重新训练模型
-
-1. 用 DEEPCRAFT Studio 打开 `LiveDataCollection/` 采集新数据
-2. 在 `finetuned_model/` 中训练/微调
-3. 导出 C 代码替换 `test/proj_cm55/model/` 与 `test/proj_cm33_ns/model/` 中的文件
-4. 重新执行 `./flash_model.sh`
 
 ---
 

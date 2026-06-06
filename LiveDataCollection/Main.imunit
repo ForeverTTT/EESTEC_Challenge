@@ -1,29 +1,22 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Imaginet version="2.0.0.0">
   <Compound unit="e2e038a0-e281-4de4-a43c-355bd5afec8d">
-    <UiEvents />
     <Nodes>
-      <LabelListNode width="120" height="120" id="node_0" x="170" y="235.60000000000002">
-        <Label>up</Label>
-        <Label>down</Label>
-        <Label>left</Label>
-        <Label>right</Label>
-        <Label>off</Label>
-        <Label>on</Label>
+      <LabelListNode id="node_0" width="120" height="120" x="421.8416666666667" y="166.39999999999995" enabled="true" profiling="false">
+        <Label>unlabeled
+East
+South
+West
+Nord</Label>
       </LabelListNode>
-      <UnitNode unit="Imaginet.Units.Io.ImagimobSerialCapture" enabled="False" id="node_1" x="383.5999999999999" y="772.4000000000001">
-        <StringArgument param="port">COM3</StringArgument>
-      </UnitNode>
-      <UnitNode unit="Imaginet.Units.Io.Microphone" id="node_2" x="333.20000000000016" y="593.9999999999999" />
-      <UnitNode unit="ImagimobStudio.Modules.DataTrack" id="node_3" name="Local Microphone Output Samples DataTrack" x="783.6000000000001" y="636.4000000000001" />
+      <UnitNode id="node_3" x="289.655" y="-5.730000000000047" enabled="true" profiling="false" name="Local Microphone Output Samples DataTrack" unit="ImagimobStudio.Modules.DataTrack" />
+      <DeviceNode id="node_4" x="8.479088713227839" y="-45.269601928347385" enabled="true" profiling="false" name="Microphone" board="290de5cb-460b-41bf-7dd4-800e291d0133" boardName="PSOC Edge E84 AI Kit " device="0">
+        <BooleanArgument param="stereo_20">true</BooleanArgument>
+      </DeviceNode>
     </Nodes>
     <Connections>
       <Connection>
-        <Source node="node_2" param="data" />
-        <Target node="node_3" param="data" />
-      </Connection>
-      <Connection>
-        <Source node="node_1" param="data" />
+        <Source node="node_4" param="Audio" />
         <Target node="node_3" param="data" />
       </Connection>
     </Connections>

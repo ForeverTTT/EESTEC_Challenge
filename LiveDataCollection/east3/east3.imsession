@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ImagimobStudio version="0.9">
+  <Timeline id="50e995e5-c419-4125-a227-b2445947e1a1">
+    <Tracks>
+      <Track name="Live Labeling" type="labelcsv">
+        <PayloadFile>Live-Labeling.label</PayloadFile>
+        <Shape />
+      </Track>
+      <Track name="Local Microphone Output Samples DataTrack" type="audiowav" isLabelTrack="False" frequency="16000">
+        <PayloadFile>Local-Microphone-Output-Samples-DataTrack.wav</PayloadFile>
+        <Offset unit="seconds">3.1200000000E-005</Offset>
+        <Shape>
+          <Axis name="Channel" size="2">
+            <Label index="0">Left</Label>
+            <Label index="1">Right</Label>
+          </Axis>
+        </Shape>
+      </Track>
+    </Tracks>
+  </Timeline>
+</ImagimobStudio>

@@ -24,10 +24,8 @@
   - [6. 训练策略与收敛分析](#6-训练策略与收敛分析)
   - [7. 实验结果与模型选择](#7-实验结果与模型选择)
   - [8. 小结](#8-小结)
-- [核心亮点](#核心亮点)
-- [环境依赖](#环境依赖)
-- [参考资料](#参考资料)
-
+- [创新点](#创新点)
+- [反馈](#反馈)
 ---
 
 ## 项目背景
@@ -66,23 +64,13 @@
 
 ### 1. 编译并烧录
 
-官方文档默认通过 Eclipse ModusToolbox™ IDE 导入工程、点击 Build 和 Program 完成编译烧录。通过仔细观察源代码库，我们发现 `test/` 目录下已包含 ModusToolbox 原生的命令行构建体系，核心文件如下：
-
-- **`test/Makefile`** — 顶层 Application Makefile（`MTB_TYPE=APPLICATION`），定义三核子工程 `proj_cm33_s`、`proj_cm33_ns`、`proj_cm55`，并引入 ModusToolbox 的 `application.mk`
-- **`test/common.mk`** — 各子工程共享的配置，指定目标板 `TARGET=APP_KIT_PSE84_AI`、工具链 `TOOLCHAIN=GCC_ARM`、推理核心 `ML_DEEPCRAFT_CPU=cm55` 等
-- **`test/common_app.mk`** — 应用级路径与依赖配置
-
-这意味着无需打开 Eclipse，直接在终端执行 `make build` 和 `make program` 即可完成与 IDE 等价的编译与烧录。
-
-基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本，将上述两条 make 命令封装为一键操作。
-
-**运行方式**（需已安装 ModusToolbox™ 并配置好 `CY_TOOLS_DIR` 环境变量）：
-
 ```bash
 chmod +x flash_model.sh
 ./flash_model.sh          # macOS / Linux
 bash flash_model.sh       # Windows (Git Bash)
 ```
+
+需已安装 ModusToolbox™ 并配置 `CY_TOOLS_DIR`。实现原理见 [创新点](#创新点)。
 
 ### 2. 监听推理结果
 
@@ -319,18 +307,21 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 ## 创新点
 
-### 1. 不使用Eclipse, 运用脚本自动化编译烧录
+### 1. 不使用 Eclipse，运用脚本自动化编译烧录
 
-我们分析了 `test/` 目录下的 **`Makefile`** 与 **`common.mk`**，发现原项目支持命令行构建。我们将构建脚本写入 `./flash_model.sh` 中，通过运行以下指令即可完成编译与烧录，无需打开 Eclipse IDE：
+官方文档默认通过 Eclipse ModusToolbox™ IDE 导入工程、点击 Build 和 Program 完成编译烧录。通过仔细观察源代码库，我们发现 `test/` 目录下已包含 ModusToolbox 原生的命令行构建体系，核心文件如下：
+
+- **`test/Makefile`** — 顶层 Application Makefile（`MTB_TYPE=APPLICATION`），定义三核子工程 `proj_cm33_s`、`proj_cm33_ns`、`proj_cm55`，并引入 ModusToolbox 的 `application.mk`
+- **`test/common.mk`** — 各子工程共享的配置，指定目标板 `TARGET=APP_KIT_PSE84_AI`、工具链 `TOOLCHAIN=GCC_ARM`、推理核心 `ML_DEEPCRAFT_CPU=cm55` 等
+- **`test/common_app.mk`** — 应用级路径与依赖配置
+
+这意味着无需打开 Eclipse，直接在终端执行 `make build` 和 `make program` 即可完成与 IDE 等价的编译与烧录。
+
+基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本，将上述两条 make 命令封装为一键操作。通过运行以下指令即可完成编译与烧录：
 
 ```bash
 ./flash_model.sh
 ```
-
-关键配置文件：
-- `test/Makefile` — 顶层 Application Makefile，定义三核工程 `proj_cm33_s / proj_cm33_ns / proj_cm55`
-- `test/common.mk` — 共享设置：`TARGET=APP_KIT_PSE84_AI`、`TOOLCHAIN=GCC_ARM`、`ML_DEEPCRAFT_CPU=cm55`
-- `test/common_app.mk` — 应用级路径与依赖
 
 ### 2. Python 工具链闭环
 
@@ -344,3 +335,19 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 ### 3. 完整可复现的数据→模型→部署链路
 
 从 `sounds/` 音源选择、`LiveDataCollection/` 采集、`finetuned_model/` 训练到 `test/` 部署，每个环节均有独立目录与文档，新成员可按 README 完整复现。
+
+---
+
+## 反馈
+
+以下为我们小组对本项目的整体感受与体会：
+
+这是一次非常值得参与、也很有意思的挑战。作为 **Informatics 与 Mathematics 背景** 的同学，我们此前几乎没有接触过嵌入式（Embedded）开发——从数据采集、模型训练到烧录部署的完整链路，都是第一次亲手走通。整个过程非常锻炼人，也让我们对 Edge AI 的实际落地有了更具体的认识。
+
+**收获：** 我们学到了许多新知识——双麦克风方向估计、Mel 频谱特征提取、MCU 端 INT8 量化推理、ModusToolbox 工程结构，以及如何用脚本替代 IDE 完成自动化部署。能把一个神经网络模型真正跑在开发板上，是很有成就感的体验。
+
+**上手门槛：** 前期 **ModusToolbox、DEEPCRAFT Studio 等软件的安装与环境调试** 占用了较多时间。如果 Hackathon 官方或后续参与者能提供更细致的分步安装与排错文档，上手速度会快很多。
+
+**工具体验：** DEEPCRAFT Studio 在数据采集和一键部署方面非常友好，但在 **神经网络结构微调与实验迭代** 上，不如直接用 Python（PyTorch / TensorFlow）写代码来得灵活。对于习惯代码驱动 ML 流程的同学，需要一定时间适应其 GUI 工作流。
+
+**总结：** 尽管前期 setup 略为耗时，但总体而言这是一次 **非常值得、收获满满** 的挑战。我们从零完成了一次完整的 Edge ML 项目，对 Infineon 生态和嵌入式 AI 有了深入理解，也推荐给后续参加类似 Hackathon 的同学。

@@ -231,7 +231,7 @@ flowchart LR
 #### 6.2 Loss 收敛行为
 
 <p align="center">
-  <img src="./assets/loss.png" alt="Training and validation loss curves" width="600"/>
+  <img src="./assets/loss.png" alt="Training and validation loss curves" width="780"/>
   <br/>
   <em><strong>Figure 8.</strong> 训练与验证 Loss 曲线（10 epochs）。Train Loss 从 0.68 单调降至 0.42；Validation Loss 从 0.50 降至 0.36，且始终低于 Train Loss。</em>
 </p>
@@ -241,7 +241,7 @@ Loss 曲线呈现健康的收敛模式：两条曲线同步下降，Validation L
 #### 6.3 Accuracy 收敛行为
 
 <p align="center">
-  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="600"/>
+  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="700"/>
   <br/>
   <em><strong>Figure 9.</strong> 训练与验证 Accuracy 曲线。Train Acc 从 74% 升至 86.5%；Validation Acc 从 76% 升至 ~84%，epoch 4–5 后趋于稳定。</em>
 </p>
@@ -263,7 +263,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.2 测试集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="780"/>
+  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="700"/>
   <br/>
   <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
 </p>

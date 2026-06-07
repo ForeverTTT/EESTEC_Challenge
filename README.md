@@ -3,9 +3,9 @@
 
 **Complete Implementation of the Infineon Hackathon Challenge**
 
-This project corresponds to the [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) challenge: using the dual-microphone array on the PSOC™ Edge E84 AI Kit to determine in real time which of the four directions **East, Nord (North), South, or West** an emergency vehicle siren/ambulance sound is coming from.
+This project addresses the [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) challenge: using the dual-microphone array on the PSOC™ Edge E84 AI Kit to determine in real time which of the four directions — **East, North, South, or West** — an emergency vehicle siren sound is coming from.
 
-The repository is self-contained and covers the full pipeline of **data collection → model training → embedded deployment → real-time validation**, built with DEEPCRAFT™ Studio and ModusToolbox™. No Eclipse IDE is required — a single command compiles and flashes the firmware, and the board is ready to run once connected.
+The repository covers the full pipeline of **data collection → model training → embedded deployment → real-time validation**, built with DEEPCRAFT™ Studio. A single command compiles and flashes the firmware; once connected, the board is ready to run. No Eclipse IDE is required.
 
 ---
 
@@ -75,8 +75,6 @@ chmod +x flash_model.sh
 bash flash_model.sh       # Windows (Git Bash)
 ```
 
-ModusToolbox™ must be installed and `CY_TOOLS_DIR` configured. See [Innovations](#innovations) for implementation details.
-
 ### 2. Monitor Inference Results
 
 1. Set the development board BOOT SW to ON and connect USB to KitProg3
@@ -99,7 +97,7 @@ To retrain or fine-tune the model on top of existing data, follow this workflow:
    Launch DEEPCRAFT™ Studio and open the `finetuned_model/` folder in this repository.
 
 2. **Import labeled data**  
-   Import the directional recording data from `LiveDataCollection/` that has been collected and **fully Label-annotated** into the current project. This dataset contains five class labels — East / Nord / South / West / unlabeled — and requires no re-labeling.
+   Import the directional recording data from `LiveDataCollection/` that has been collected and **fully label-annotated** into the current project. This dataset contains five class labels — East / Nord / South / West / unlabeled — and requires no re-labeling.
 
 3. **Adjust the model and train**  
    Adjust the network architecture, training parameters, and data split in Studio as needed, start training, and monitor validation metrics until the model converges.
@@ -119,7 +117,7 @@ To retrain or fine-tune the model on top of existing data, follow this workflow:
 
 ### 1. Problem Definition
 
-We formulate siren direction-of-arrival detection as a five-class classification task: in addition to the four cardinal directions, an unlabeled class distinguishes directional sirens from pure background noise; directional information is primarily conveyed through left-right loudness differences between the dual microphones. At the same time, constrained by PSOC Edge CM55 INT8 quantization and low-latency requirements, feature dimensionality and network size must remain lightweight.
+We formulate siren direction-of-arrival detection as a five-class classification task: in addition to the four cardinal directions, an unlabeled class distinguishes directional sirens from pure background noise. Directional information is primarily conveyed through left-right loudness differences between the dual microphones. Meanwhile, constrained by PSOC Edge CM55 INT8 quantization and low-latency requirements, feature dimensionality and network size must remain lightweight.
 
 ### 2. Overall Pipeline
 
@@ -143,13 +141,13 @@ We completed data collection under the following setup:
 
 - **Hardware:** PSOC™ Edge E84 AI Kit, dual PDM microphone array fixed on the development board
 - **Sound source:** A single speaker as the playback device; the development board position is fixed, and the speaker is placed sequentially in the East, North, South, and West directions
-- **Collection method:** **10** Sessions per direction, totaling 40 directional recordings. Some Sessions were recorded at **fixed distances** (10, 20, 30, 40, 50, 60 cm, increasing in 10 cm increments); other Sessions were recorded at **variable distances**, with the experimenter freely adjusting the spacing between the speaker and the development board to cover near-field to mid-far field and distance variations encountered in real-world use
+- **Collection method:** **10** Sessions per direction, totaling 40 directional recordings. Some Sessions were recorded at **fixed distances** (10, 20, 30, 40, 50, 60 cm, increasing in 10 cm increments); other Sessions were recorded at **variable distances**, with the experimenter freely adjusting the spacing between the speaker and the development board to cover near-field to mid-far-field distances and distance variations encountered in real-world use
 - **Signal:** Play test audio from `sounds/`; each Session lasts approximately 10–30 s with multiple repeated playbacks within the segment, facilitating aligned labeling with consistent content each time
 - **Tool:** DEEPCRAFT Studio `LiveDataCollection` project, PC microphone real-time recording + Live Labeling synchronous annotation
 
 #### 3.2 Dataset Composition and Split
 
-Split approximately 80/10/10 into training, validation, and test sets with roughly balanced sample counts. The `unlabeled` class captures ambient noise when no siren is present.
+The dataset was split approximately 80/10/10 into training, validation, and test sets with roughly balanced sample counts. The `unlabeled` class captures ambient noise when no siren is present.
 
 <p align="center">
   <img src="./assets/data%20split.png" alt="Dataset split statistics" width="680"/>
@@ -162,7 +160,7 @@ Split approximately 80/10/10 into training, validation, and test sets with rough
 
 The following three figures show typical Live Labeling Sessions for the East, Nord, and West directions. Each Session consists of multiple short pulses (corresponding to test tone playback) with silence between segments; the blue labeling track aligns one-to-one with energy peaks in the waveform, indicating accurate annotation.
 
-More noteworthy is the **left-right channel difference**: the dual microphones on the board are arranged along the East-West axis. When the sound source comes from **East or West**, the microphone closer to the source shows noticeably larger waveform amplitude, with a clear high-low distinction between the two channels and strong directional features. When the sound source comes from **Nord or South**, both microphones are at similar distances from the source, the left-right waveforms are nearly synchronized with minimal amplitude difference, and directional distinguishability is noticeably weaker than for East-West — which is also one reason the model is more prone to confusion in directions such as East.
+More noteworthy is the **left-right channel difference**: the dual microphones on the board are arranged along the East-West axis. When the sound source comes from **East or West**, the microphone closer to the source shows noticeably larger waveform amplitude, with a clear high-low distinction between the two channels and strong directional features. When the sound source comes from **Nord or South**, both microphones are at similar distances from the source; the left-right waveforms are nearly synchronized with minimal amplitude difference, and directional distinguishability is noticeably weaker than for East-West — which is also one reason the model is more prone to confusion in directions such as East.
 
 <p align="center">
   <img src="./assets/data%20east.png" alt="East direction waveform" width="780"/>
@@ -201,7 +199,7 @@ Raw dual-channel waveforms cannot be fed directly into the network; they must fi
 
 With input fixed as `[50, 30]` Mel features, the model must balance **recognition accuracy** against **on-board compute capacity**. We adopt DEEPCRAFT's built-in **`conv1d-small`**: only approximately 4,500 parameters, capable of real-time INT8 inference on CM55.
 
-The network performs one-dimensional convolution along the **time axis** (50 as time, 30 as frequency), lighter than two-dimensional convolution. The main body consists of 4 Conv1D layers with pooling to progressively extract temporal patterns, followed by a fully connected layer outputting five-class probabilities (East / Nord / South / West / unlabeled). With limited data, BatchNorm and Dropout are added during training to suppress overfitting; global average pooling replaces a large Flatten layer at the end to further control parameter count.
+The network performs one-dimensional convolution along the **time axis** (50 as time, 30 as frequency), which is lighter than two-dimensional convolution. The main body consists of 4 Conv1D layers with pooling to progressively extract temporal patterns, followed by a fully connected layer outputting five-class probabilities (East / Nord / South / West / unlabeled). With limited data, BatchNorm and Dropout are added during training to suppress overfitting; global average pooling replaces a large Flatten layer at the end to further control parameter count.
 
 <p align="center">
   <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="580"/>
@@ -213,19 +211,19 @@ The network performs one-dimensional convolution along the **time axis** (50 as 
 
 #### 6.1 Hyperparameter Configuration
 
-We systematically compared multiple `conv1d-small` variants, with main variation dimensions being data balancing strategy (parameter P) and model depth. All experiments share the following base hyperparameters:
+We systematically compared multiple `conv1d-small` variants, with variations mainly in data balancing strategy (parameter P) and model depth. All experiments share the following base hyperparameters:
 
 | Hyperparameter | Value | Rationale |
 |----------------|-------|-----------|
 | Batch Size | 4 | Small batch introduces gradient noise, aiding generalization on small datasets |
-| Epochs | 10 | Combined with early stopping at Patience=20, avoids over-training |
+| Epochs | 10 | With early stopping (patience=20), avoids over-training |
 | Learning Rate | 0.0003 | DEEPCRAFT default value, stable convergence on conv1d-small |
 | Weight Decay | 0.001 | L2 regularization, suppresses overfitting on small datasets |
 | Class Weights | Shared | Sample counts per class are manually balanced, no additional weighting needed |
 
 #### 6.2 Loss Convergence Behavior
 
-The loss curves show a healthy convergence pattern: both curves decline in sync, with Validation Loss consistently below Train Loss, indicating the model is not overfitting and generalizes well on unseen data. Validation Loss reaches local minima near epochs 3, 6, and 9 (~0.36), suggesting 10 epochs is sufficient and further training yields limited benefit.
+The loss curves show a healthy convergence pattern: both curves decrease together, with Validation Loss consistently below Train Loss, indicating the model is not overfitting and generalizes well on unseen data. Validation Loss reaches local minima near epochs 3, 6, and 9 (~0.36), suggesting 10 epochs is sufficient and further training yields limited benefit.
 
 <p align="center">
   <img src="./assets/loss.png" alt="Training and validation loss curves" width="780"/>
@@ -236,7 +234,7 @@ The loss curves show a healthy convergence pattern: both curves decline in sync,
 
 #### 6.3 Accuracy Convergence Behavior
 
-The accuracy curves further validate the above assessment: Validation Accuracy reaches ~84% around epochs 4–5 and then plateaus, while Train Accuracy continues to rise slowly (final 86.5%), with a gap of approximately 2.5%. This is typical mild overfitting on small datasets, within acceptable range.
+The accuracy curves further validate the above assessment: Validation Accuracy reaches ~84% around epochs 4–5 and then plateaus, while Train Accuracy continues to rise slowly (final 86.5%), with a gap of approximately 2.5%. This is typical mild overfitting on small datasets, within an acceptable range.
 
 <p align="center">
   <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="780"/>
@@ -263,8 +261,8 @@ The model performs strongly on the training set (91.08%), with recall > 86% for 
 
 Test set accuracy is 82.50%, lower than the training set's 91.08%, which is normal for a small dataset. Three main findings:
 
-- **West is easiest to recognize (87.3%):** When the sound source is on the West side, the dual microphones show the most pronounced "one high, one low" pattern, making it easiest for the model to judge.
-- **East is most prone to errors (74.5%):** Often confused with "no siren" background or West — the East and West sides sound too similar, and the model sometimes cannot distinguish them.
+- **West is easiest to recognize (87.3%):** When the sound source is on the West side, the dual microphones show the most pronounced "one high, one low" pattern, making it easiest for the model to classify.
+- **East is most prone to errors (74.5%):** Often confused with "no siren" background or West — the East and West sides sound too similar, and the model sometimes fails to distinguish them.
 - **Nord / South are in the middle (~84%):** Both microphones receive similar sound levels, with stable performance and no particularly prominent misclassifications.
 
 <p align="center">
@@ -280,13 +278,13 @@ Test set accuracy is 82.50%, lower than the training set's 91.08%, which is norm
 
 ### 1. Script-Automated Compile and Flash Without Eclipse
 
-Official documentation defaults to importing the project through the Eclipse ModusToolbox™ IDE and clicking Build and Program to compile and flash. By carefully examining the source repository, we found that the `test/` directory already contains ModusToolbox's native command-line build system, with the following core files:
+Official documentation typically requires importing the project through the Eclipse ModusToolbox™ IDE and clicking Build and Program to compile and flash. After examining the source repository, we found that the `test/` directory already contains ModusToolbox's native command-line build system, with the following core files:
 
 - **`test/Makefile`** — Top-level Application Makefile (`MTB_TYPE=APPLICATION`), defining tri-core sub-projects `proj_cm33_s`, `proj_cm33_ns`, `proj_cm55`, and importing ModusToolbox's `application.mk`
 - **`test/common.mk`** — Shared configuration for sub-projects, specifying target board `TARGET=APP_KIT_PSE84_AI`, toolchain `TOOLCHAIN=GCC_ARM`, inference core `ML_DEEPCRAFT_CPU=cm55`, etc.
 - **`test/common_app.mk`** — Application-level path and dependency configuration
 
-This means Eclipse is not required — running `make build` and `make program` directly in the terminal achieves the same compile and flash as the IDE.
+This means Eclipse is not required — running `make build` and `make program` directly in the terminal provides the same compilation and flashing as the IDE.
 
 Based on this, we wrote the **`flash_model.sh`** script in the root directory. Running the following command completes compilation and flashing:
 
@@ -296,15 +294,15 @@ Based on this, we wrote the **`flash_model.sh`** script in the root directory. R
 
 ### 2. Python Toolchain
 
-Beyond DEEPCRAFT™ Studio's GUI workflow, we supplemented two lightweight Python scripts on the PC side, covering **feature debugging** and **on-board validation** respectively, forming a complete closed loop of "train → export → flash → monitor" without needing additional serial debugging tools or manual firmware log parsing.
+Beyond DEEPCRAFT™ Studio's GUI workflow, we supplemented two lightweight Python scripts on the PC side for **feature debugging** and **on-board validation**, forming a complete closed loop of "train → export → flash → monitor" without needing additional serial debugging tools or manual firmware log parsing.
 
 #### `model.py` — PC-Side Reproduction
 
 `model.py` is generated synchronously by DEEPCRAFT Studio during model export, maintaining the same parameters and operator order as the on-board preprocessing code. Its main uses:
 
 - **Alignment verification:** Run feature extraction with NumPy on PC to confirm consistency with the Studio training phase.
-- **Offline debugging:** Test preprocessing output shape and value range on arbitrary dual-channel audio segments without connecting the development board
-- **Rapid experimentation:** Try new physical features or data augmentation on the Python side; iterate on `model.py` first, then write back to the DEEPCRAFT project
+- **Offline debugging:** Test preprocessing output shape and value range on arbitrary dual-channel audio segments without connecting the development board.
+- **Rapid experimentation:** Try new physical features or data augmentation on the Python side; iterate on `model.py` first, then write back to the DEEPCRAFT project.
 
 #### `test.py` — Real-Time Serial Monitoring
 
@@ -330,17 +328,17 @@ During the project, we identified the following **hardware and algorithm-level l
    - Can be extended to a **4-microphone array** (e.g., one on each side), covering 360° directions and introducing phase differences in vertical or front-back dimensions.
 
 2. **Microphone spacing, board form factor, and physical prior embedding**
-   - The current model does not explicitly leverage physical parameters such as microphone spacing and PCB dimensions; feature extraction is predominantly data-driven
-   - Inject **microphone spacing, speed of sound, sample rate, microphone coordinates**, etc. as priors into features or network architecture; fuse physics-based estimates at the feature layer and impose physical consistency constraints on predictions beyond array resolution
+   - The current model does not explicitly leverage physical parameters such as microphone spacing and PCB dimensions; feature extraction is predominantly data-driven.
+   - Inject **microphone spacing, speed of sound, sample rate, microphone coordinates**, etc. as priors into features or network architecture; fuse physics-based estimates at the feature layer and impose physical consistency constraints on predictions beyond array resolution.
 
 3. **Data augmentation and scene coverage**
-   - To support **more directions or finer-grained angles** (e.g., 8 directions), classification boundaries become more complex, requiring **larger-scale, more precisely labeled directional data**
-   - Increase sample collection for easily confused directions (e.g., East / West) and boundary angles
-   - Introduce more **data augmentation**: reverb, background noise overlay, varying playback distance and angle fine-tuning
-   - Train with more real siren recordings to improve real-world robustness
+   - To support **more directions or finer-grained angles** (e.g., 8 directions), classification boundaries become more complex, requiring **larger-scale, more precisely labeled directional data**.
+   - Increase sample collection for easily confused directions (e.g., East / West) and boundary angles.
+   - Introduce more **data augmentation**: reverb, background noise overlay, varying playback distance and angle fine-tuning.
+   - Train with more real siren recordings to improve real-world robustness.
 
 4. **Toolchain**
-   - While retaining DEEPCRAFT deployment advantages, use the Python side for model search and physical feature experiments, then export the optimal architecture to Studio
+   - While retaining DEEPCRAFT deployment advantages, use the Python side for model search and physical feature experiments, then export the optimal architecture to Studio.
 
 ---
 
@@ -348,12 +346,12 @@ During the project, we identified the following **hardware and algorithm-level l
 
 The following reflects our team's overall impressions and takeaways from this project:
 
-This was a very worthwhile and interesting challenge to participate in. The organization of this Challenge was excellent, providing participants with abundant food and necessary competition supplies. As students with **Informatics and Mathematics backgrounds**, we had virtually no prior exposure to embedded development and were all going through it hands-on for the first time. The entire process was very demanding but also gave us a more concrete understanding of real-world embedded AI deployment.
+This was a very worthwhile and interesting challenge. The Challenge was very well organized, providing participants with abundant food and necessary competition supplies. As students with Informatics and Mathematics backgrounds, we had no prior experience to embedded development and were all going through it hands-on for the first time. The entire process was very challenging but also gave us a more concrete understanding of real-world embedded AI deployment.
 
-**Onboarding barrier:** The initial **installation and environment setup of ModusToolbox, DEEPCRAFT Studio, and other software** consumed a significant amount of time. If the Hackathon organizers or future participants could provide more detailed installation steps, the onboarding speed would be much faster.
+**Onboarding barrier:** The installation and environment setup of ModusToolbox, DEEPCRAFT Studio, and other software consumed a significant amount of time. If the Hackathon organizers or future participants could provide more detailed installation steps, onboarding would be much faster.
 
-**Tool experience:** DEEPCRAFT Studio is very user-friendly for data collection and one-click deployment, but for **neural network architecture fine-tuning and experimental iteration**, it is less flexible than writing code directly in Python (PyTorch / TensorFlow). Students accustomed to code-driven ML workflows need some time to adapt to its GUI workflow.
+**Tool experience:** DEEPCRAFT Studio is very user-friendly for data collection and one-click deployment, but for neural network architecture fine-tuning and experimental iteration, it is less flexible than writing code directly in Python (PyTorch / TensorFlow). Students accustomed to code-driven ML workflows need some time to adapt to its GUI workflow.
 
-**Summary:** Despite the somewhat time-consuming initial setup, overall this was a **very worthwhile and rewarding** challenge. We completed a full embedded AI project from scratch, gained deep understanding of the Infineon ecosystem and embedded AI, and recommend it to students participating in similar Hackathons in the future.
+**Summary:** Despite the somewhat time-consuming initial setup, overall this was a very worthwhile and rewarding challenge. We completed a full embedded AI project from scratch, gained deep understanding of the Infineon ecosystem and embedded AI, and recommend it to students participating in similar Hackathons in the future.
 
 ---

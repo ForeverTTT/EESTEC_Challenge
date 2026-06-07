@@ -214,12 +214,6 @@ flowchart LR
 
 我们系统性地对比了多个 `conv1d-small` 变体，主要变化维度为数据平衡策略（参数 P）和模型深度。所有实验共享以下基础超参数：
 
-<p align="center">
-  <img src="./assets/training%20paras.png" alt="Training hyperparameters" width="680"/>
-  <br/>
-  <em><strong>Figure 7.</strong> 训练超参数配置：Batch Size = 4, Split Count = 16, 4 组 conv1d-small 实验（P = 35/45/67/89），Epochs = 10, LR = 0.0003, Weight Decay = 0.001。</em>
-</p>
-
 | 超参数 | 值 | 选择理由 |
 |--------|-----|----------|
 | Batch Size | 4 | 小 batch 引入梯度噪声，有助于小数据集泛化 |
@@ -278,10 +272,6 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
   <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
 </p>
 
-
-#### 7.3 最终模型选择
-
-综合训练曲线（Figure 8–9）与训练集/测试集混淆矩阵（Figure 10–11），选定 `finetuned_model/` 中训练得到的 **`conv1d-small`** 变体，导出 `model.c` / `model.h` 部署至 `test/proj_cm55/model/`。该模型测试集准确率 82.50%，满足 CM55 INT8 实时推理约束，并已在板端 UART 输出中验证可用。
 
 ---
 

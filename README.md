@@ -1,72 +1,73 @@
 # Emergency Vehicle Direction Detection
 
 
-**Infineon Hackathon Challenge 完整实现**
+**Complete Implementation of the Infineon Hackathon Challenge**
 
-本项目对应 [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) 赛题：使用 PSOC™ Edge E84 AI Kit 的双麦克风阵列，实时判断紧急车辆（警笛/救护车）声源来自 **East（东）、Nord（北）、South（南）、West（西）** 四个方向中的哪一个。
+This project corresponds to the [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) challenge: using the dual-microphone array on the PSOC™ Edge E84 AI Kit to determine in real time which of the four directions **East, Nord (North), South, or West** an emergency vehicle siren/ambulance sound is coming from.
 
-仓库自包含 **数据采集 → 模型训练 → 嵌入式部署 → 实时验证** 全流程，基于 DEEPCRAFT™ Studio 与 ModusToolbox™ 完成。无需打开 Eclipse IDE，一条命令即可编译烧录，接上开发板即可运行。
-
----
-
-## 目录
-
-- [项目背景](#项目背景)
-- [项目结构](#项目结构)
-- [运行方式](#运行方式)
-- [训练步骤](#训练步骤)
-- [方法与思路](#方法与思路)
-  - [1. 问题定义](#1-问题定义)
-  - [2. 总体方案](#2-总体方案)
-  - [3. 数据采集与标注策略](#3-数据采集与标注策略)
-  - [4. 特征工程设计](#4-特征工程设计)
-  - [5. 模型架构设计](#5-模型架构设计)
-  - [6. 训练策略与收敛分析](#6-训练策略与收敛分析)
-  - [7. 实验结果与模型选择](#7-实验结果与模型选择)
-- [创新点](#创新点)
-- [限制与提升点](#限制与提升点)
-- [反馈](#反馈)
-
-## 项目背景
-
-| 项目 | 说明 |
-|------|------|
-| 原始挑战 | Infineon Hackathon — Emergency Vehicle Direction of Arrival |
-| 硬件平台 | PSOC™ Edge E84 AI Kit（双 PDM 麦克风） |
-| 开发工具 | DEEPCRAFT™ Studio（数据采集、标注、训练、导出） |
-| 部署框架 | ModusToolbox™ + TensorFlow Lite for Microcontrollers |
-| 分类任务 | 5 类：East / Nord / South / West / unlabeled |
-
-本仓库提供：**自采集定向数据、Conv1D 模型训练工程、板端部署工程，以及一键烧录与串口监听脚本**。
+The repository is self-contained and covers the full pipeline of **data collection → model training → embedded deployment → real-time validation**, built with DEEPCRAFT™ Studio and ModusToolbox™. No Eclipse IDE is required — a single command compiles and flashes the firmware, and the board is ready to run once connected.
 
 ---
 
-## 项目结构
+## Table of Contents
 
-本仓库目录结构如下：
+- [Project Background](#project-background)
+- [Project Structure](#project-structure)
+- [How to Run](#how-to-run)
+- [Training Steps](#training-steps)
+- [Methodology and Approach](#methodology-and-approach)
+  - [1. Problem Definition](#1-problem-definition)
+  - [2. Overall Pipeline](#2-overall-pipeline)
+  - [3. Data Collection and Labeling Strategy](#3-data-collection-and-labeling-strategy)
+  - [4. Feature Engineering Design](#4-feature-engineering-design)
+  - [5. Model Architecture Design](#5-model-architecture-design)
+  - [6. Training Strategy and Convergence Analysis](#6-training-strategy-and-convergence-analysis)
+  - [7. Experimental Results and Model Selection](#7-experimental-results-and-model-selection)
+- [Innovations](#innovations)
+- [Limitations and Future Improvements](#limitations-and-future-improvements)
+- [Feedback](#feedback)
+
+## Project Background
+
+| Item | Description |
+|------|-------------|
+| Original Challenge | Infineon Hackathon — Emergency Vehicle Direction of Arrival |
+| Hardware Platform | PSOC™ Edge E84 AI Kit (dual PDM microphones) |
+| Development Tool | DEEPCRAFT™ Studio (data collection, labeling, training, export) |
+| Deployment Framework | ModusToolbox™ + TensorFlow Lite for Microcontrollers |
+| Classification Task | 5 classes: East / Nord / South / West / unlabeled |
+
+This repository provides: **self-collected directional data, Conv1D model training project, on-board deployment project, and one-click flash & serial monitoring scripts**.
+
+---
+
+## Project Structure
+
+The repository directory structure is as follows:
+
 
 ```
 EESTEC_Challenge/
-├── assets/                     # 实验可视化图表（损失曲线、混淆矩阵、数据分布、模型结构等）
-├── sounds/                     # 警笛/救护车参考音源，用于数据采集时播放
-├── LiveDataCollection/         # DEEPCRAFT 数据采集工程（40 条定向录音，每方向 10 条，需导入训练工程）
-├── finetuned_model/            # DEEPCRAFT 模型训练工程（导入 LiveDataCollection 数据后训练）
-│   └── Models/<模型名>/        #   训练产出的 .h5 权重
-│       └── Infineon/           #   导出 model.c / model.h
-├── test/                       # PSOC Edge 嵌入式部署工程（ModusToolbox 三核结构）
-│   └── proj_cm55/model/        #   烧录用 model.c / model.h（由 finetuned_model 导出后替换）
-├── flash_model.sh              # 一键编译并烧录到开发板
-├── model.py                    # DEEPCRAFT 导出的 Mel 预处理管线（PC 端复现）
-└── test.py                     # 串口监听脚本，实时显示板端推理结果
+├── assets/                     # Experimental visualization charts (loss curves, confusion matrices, data distribution, model architecture, etc.)
+├── sounds/                     # Siren/ambulance reference audio sources for playback during data collection
+├── LiveDataCollection/         # DEEPCRAFT data collection project (40 directional recordings, 10 per direction; import into training project)
+├── finetuned_model/            # DEEPCRAFT model training project (train after importing LiveDataCollection data)
+│   └── Models/<model_name>/    #   Trained .h5 weights
+│       └── Infineon/           #   Exported model.c / model.h
+├── test/                       # PSOC Edge embedded deployment project (ModusToolbox tri-core structure)
+│   └── proj_cm55/model/        #   model.c / model.h for flashing (replace after export from finetuned_model)
+├── flash_model.sh              # One-click compile and flash to development board
+├── model.py                    # DEEPCRAFT-exported Mel preprocessing pipeline (PC-side reproduction)
+└── test.py                     # Serial monitoring script, displays on-board inference results in real time
 ```
 
 ---
 
-## 运行方式
+## How to Run
 
-**环境：** ModusToolbox™（含 GCC_ARM）、PSOC™ Edge E84 AI Kit、Python 3.x。路径中不要有空格。
+**Environment:** ModusToolbox™ (with GCC_ARM), PSOC™ Edge E84 AI Kit, Python 3.x. Paths must not contain spaces.
 
-### 1. 编译并烧录
+### 1. Compile and Flash
 
 ```bash
 chmod +x flash_model.sh
@@ -74,285 +75,285 @@ chmod +x flash_model.sh
 bash flash_model.sh       # Windows (Git Bash)
 ```
 
-需已安装 ModusToolbox™ 并配置 `CY_TOOLS_DIR`。实现原理见 [创新点](#创新点)。
+ModusToolbox™ must be installed and `CY_TOOLS_DIR` configured. See [Innovations](#innovations) for implementation details.
 
-### 2. 监听推理结果
+### 2. Monitor Inference Results
 
-1. 开发板 BOOT SW 拨至 ON，USB 连接 KitProg3
-2. 修改 `test.py` 中的串口路径（macOS: `/dev/cu.usbmodemXXX`，Windows: `COM3`）
-3. 运行 `python test.py`，终端实时显示方向预测：
+1. Set the development board BOOT SW to ON and connect USB to KitProg3
+2. Modify the serial port path in `test.py` (macOS: `/dev/cu.usbmodemXXX`, Windows: `COM3`)
+3. Run `python test.py`; the terminal displays direction predictions in real time:
 
 ```
 Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 ```
 
-4. 播放 `sounds/` 中的警笛音源，从不同方向靠近开发板即可测试
+4. Play siren audio from `sounds/` and approach the development board from different directions to test
 
 ---
 
-## 训练步骤
+## Training Steps
 
-如需在已有数据基础上重新训练或微调模型，按以下流程操作：
+To retrain or fine-tune the model on top of existing data, follow this workflow:
 
-1. **打开训练工程**  
-   启动 DEEPCRAFT™ Studio，打开本仓库中的 `finetuned_model/` 文件夹。
+1. **Open the training project**  
+   Launch DEEPCRAFT™ Studio and open the `finetuned_model/` folder in this repository.
 
-2. **导入标注数据**  
-   将 `LiveDataCollection/` 中已采集、**已完成 Label 标注** 的定向录音数据导入当前工程。该数据集包含 East / Nord / South / West / unlabeled 五类标签，无需重新标注。
+2. **Import labeled data**  
+   Import the directional recording data from `LiveDataCollection/` that has been collected and **fully Label-annotated** into the current project. This dataset contains five class labels — East / Nord / South / West / unlabeled — and requires no re-labeling.
 
-3. **调整模型并训练**  
-   在 Studio 中按需调整网络结构、训练参数与数据划分，启动训练并观察验证集指标，直至模型收敛。
+3. **Adjust the model and train**  
+   Adjust the network architecture, training parameters, and data split in Studio as needed, start training, and monitor validation metrics until the model converges.
 
-4. **下载训练权重**  
-   训练完成后，在 Studio 中下载模型，获得 `.h5` 权重文件（保存在 `finetuned_model/Models/<模型名>/` 下）。
+4. **Download trained weights**  
+   After training completes, download the model in Studio to obtain the `.h5` weight file (saved under `finetuned_model/Models/<model_name>/`).
 
-5. **导出 C 代码**  
-   基于 `.h5` 文件执行代码生成（Code Generation），导出 `model.c` 与 `model.h`（位于 `finetuned_model/Models/<模型名>/Infineon/`）。
+5. **Export C code**  
+   Run Code Generation on the `.h5` file to export `model.c` and `model.h` (located at `finetuned_model/Models/<model_name>/Infineon/`).
 
-6. **替换部署文件并烧录**  
-   将导出的 `model.c` / `model.h` 替换 `test/proj_cm55/model/` 下的同名文件，然后执行 `./flash_model.sh` 重新编译烧录，即可在开发板上验证新模型。
+6. **Replace deployment files and flash**  
+   Replace the `model.c` / `model.h` files under `test/proj_cm55/model/` with the exported versions, then run `./flash_model.sh` to recompile and flash, validating the new model on the development board.
 
 ---
 
-## 方法与思路
+## Methodology and Approach
 
-### 1. 问题定义
+### 1. Problem Definition
 
-我们将警笛声源方向判断形式化为五分类任务：在四方位之外增设 unlabeled 类，以区分有方向性警笛与纯背景噪声；方位信息主要靠双麦左右响度差体现。同时受 PSOC Edge CM55 INT8 量化与低延迟约束，特征维度与网络规模须保持轻量。
+We formulate siren direction-of-arrival detection as a five-class classification task: in addition to the four cardinal directions, an unlabeled class distinguishes directional sirens from pure background noise; directional information is primarily conveyed through left-right loudness differences between the dual microphones. At the same time, constrained by PSOC Edge CM55 INT8 quantization and low-latency requirements, feature dimensionality and network size must remain lightweight.
 
-### 2. 总体方案
+### 2. Overall Pipeline
 
-基于上述约束，我们设计了如下端到端流水线：
+Given the above constraints, we designed the following end-to-end pipeline:
 
 ```mermaid
 flowchart LR
-    A["参考音源<br/>sounds/"]
-    --> B["定向采集 + Live Labeling<br/>LiveDataCollection/"]
-    --> C["特征提取<br/>预处理管线"]
-    --> D["Conv1D 分类网络<br/>finetuned_model/"]
-    --> E["部署<br/>test/"]
-    --> F["实时输出<br/>test.py"]
+    A["Reference Audio<br/>sounds/"]
+    --> B["Directional Collection + Live Labeling<br/>LiveDataCollection/"]
+    --> C["Feature Extraction<br/>Preprocessing Pipeline"]
+    --> D["Conv1D Classification Network<br/>finetuned_model/"]
+    --> E["Deployment<br/>test/"]
+    --> F["Real-time Output<br/>test.py"]
 ```
 
-### 3. 数据采集与标注策略
+### 3. Data Collection and Labeling Strategy
 
-#### 3.1 采集协议
+#### 3.1 Collection Protocol
 
-我们在以下环境完成数据采集：
+We completed data collection under the following setup:
 
-- **硬件：** PSOC™ Edge E84 AI Kit，双 PDM 麦克风阵列固定于开发板
-- **声源：** 单一扬声器作为播放端，开发板位置固定，扬声器依次置于东、北、南、西四个方向
-- **采集方法：** 每方向采集 **10 组** Session，合计 40 条定向录音。其中部分 Session 在 **固定距离** 下完成（10、20、30、40、50、60 cm，按 10 cm 递增）；另有部分 Session 在 **不固定距离** 下采集，由实验者自由调整扬声器与开发板间距，以覆盖近场至中远场及实际使用中的距离波动
-- **信号：** 播放 `sounds/` 中的测试音频，每段 Session 持续约 10–30 s，段内多次重复播放，便于对齐标注且每次内容一致。
-- **工具：** DEEPCRAFT Studio `LiveDataCollection` 工程，PC 麦克风实时录音 + Live Labeling 同步标注
+- **Hardware:** PSOC™ Edge E84 AI Kit, dual PDM microphone array fixed on the development board
+- **Sound source:** A single speaker as the playback device; the development board position is fixed, and the speaker is placed sequentially in the East, North, South, and West directions
+- **Collection method:** **10** Sessions per direction, totaling 40 directional recordings. Some Sessions were recorded at **fixed distances** (10, 20, 30, 40, 50, 60 cm, increasing in 10 cm increments); other Sessions were recorded at **variable distances**, with the experimenter freely adjusting the spacing between the speaker and the development board to cover near-field to mid-far field and distance variations encountered in real-world use
+- **Signal:** Play test audio from `sounds/`; each Session lasts approximately 10–30 s with multiple repeated playbacks within the segment, facilitating aligned labeling with consistent content each time
+- **Tool:** DEEPCRAFT Studio `LiveDataCollection` project, PC microphone real-time recording + Live Labeling synchronous annotation
 
-#### 3.2 数据集构成与划分
+#### 3.2 Dataset Composition and Split
 
-按近似 80/10/10 划分为训练集、验证集和测试集，样本量基本均衡。`unlabeled` 类用于捕获无警笛时的环境噪声。
+Split approximately 80/10/10 into training, validation, and test sets with roughly balanced sample counts. The `unlabeled` class captures ambient noise when no siren is present.
 
 <p align="center">
   <img src="./assets/data%20split.png" alt="Dataset split statistics" width="680"/>
   <br/>
-  <em><strong>Figure 1.</strong> 数据集类别分布与 Train / Validation / Test 划分（DEEPCRAFT Studio Data Explorer）。四个方向类时长均衡（约 02:20–02:31），合计标注数据 09:44，含 unlabeled 共 11:48。</em>
+  <em><strong>Figure 1.</strong> Dataset class distribution and Train / Validation / Test split (DEEPCRAFT Studio Data Explorer). The four directional classes have balanced durations (approx. 02:20–02:31), totaling 09:44 of labeled data, 11:48 including unlabeled.</em>
 </p>
 
 
-#### 3.3 各方向采集波形
+#### 3.3 Waveforms per Direction
 
-以下三图展示了 East、Nord、West 方向的典型 Live Labeling Session。每个 Session 由多段短促脉冲组成（对应测试音播放），段间为静音；蓝色标注轨道与波形中的能量峰值一一对齐，说明标注准确。
+The following three figures show typical Live Labeling Sessions for the East, Nord, and West directions. Each Session consists of multiple short pulses (corresponding to test tone playback) with silence between segments; the blue labeling track aligns one-to-one with energy peaks in the waveform, indicating accurate annotation.
 
-更值得关注的是 **左右声道差异**：开发板双麦沿东西轴向排布，当声源来自 **East 或 West** 时，靠近声源一侧的麦克风波形振幅明显更大，两路通道高低分明，方向特征清晰；而当声源来自 **Nord 或 South** 时，两路麦克风到声源距离相近，左右波形几乎同步、幅度差异很小，方向辨识度明显弱于东西向——这也是后续模型在 East 等方向更易混淆的原因之一。
+More noteworthy is the **left-right channel difference**: the dual microphones on the board are arranged along the East-West axis. When the sound source comes from **East or West**, the microphone closer to the source shows noticeably larger waveform amplitude, with a clear high-low distinction between the two channels and strong directional features. When the sound source comes from **Nord or South**, both microphones are at similar distances from the source, the left-right waveforms are nearly synchronized with minimal amplitude difference, and directional distinguishability is noticeably weaker than for East-West — which is also one reason the model is more prone to confusion in directions such as East.
 
 <p align="center">
   <img src="./assets/data%20east.png" alt="East direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 2.</strong> East 方向：两路麦克风波形一高一低，靠近声源一侧振幅明显更大；Live Labeling 轨道标注 "East 100%"。</em>
+  <em><strong>Figure 2.</strong> East direction: the two microphone waveforms show one high and one low, with the side closer to the source having noticeably larger amplitude; Live Labeling track annotated "East 100%".</em>
 </p>
 
 <p align="center">
   <img src="./assets/data%20nord.png" alt="Nord direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 3.</strong> Nord 方向：两路波形几乎重叠、幅度相当，看不出明显高低差（South 方向表现类似）。</em>
+  <em><strong>Figure 3.</strong> Nord direction: the two waveforms nearly overlap with comparable amplitudes, showing no obvious high-low difference (South direction behaves similarly).</em>
 </p>
 
 <p align="center">
   <img src="./assets/data%20west.png" alt="West direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 4.</strong> West 方向：两路波形同样高低分明，但与 East 呈相反的高低关系。</em>
+  <em><strong>Figure 4.</strong> West direction: the two waveforms also show a clear high-low distinction, but with the opposite high-low relationship compared to East.</em>
 </p>
 
-### 4. 特征工程设计
+### 4. Feature Engineering Design
 
-双通道原始波形无法直接输入网络，需先转为 **Log-Mel 频谱图**。流程在 DEEPCRAFT Studio 配置，并同步导出为 `model.py`（PC）与 `model.c` / `model.h`（板端），保证训练与部署一致。
+Raw dual-channel waveforms cannot be fed directly into the network; they must first be converted to **Log-Mel spectrograms**. The pipeline is configured in DEEPCRAFT Studio and simultaneously exported as `model.py` (PC) and `model.c` / `model.h` (on-board), ensuring consistency between training and deployment.
 
-1. **帧级滑窗：** 16 kHz 双通道音频按 512 点/帧、320 点步长切分，约每秒 100 帧。  
-2. **频谱分析：** 每帧加 Hann 窗后做 FFT，合并双麦通道，得到 257 维频率能量。  
-3. **Mel 压缩：** 合并为 30 个 Mel 频带（200 Hz–7 kHz），取对数，每帧输出 30 维特征。  
-4. **特征滑窗：** 连续堆叠 50 帧，得到 **50×30** 矩阵（约 0.5 s 上下文），作为模型输入。
+1. **Frame-level sliding window:** 16 kHz dual-channel audio segmented at 512 samples/frame with 320-sample hop, yielding approximately 100 frames per second.  
+2. **Spectral analysis:** Each frame is Hann-windowed and FFT-transformed; dual-microphone channels are merged to produce 257-dimensional frequency energy.  
+3. **Mel compression:** Merged into 30 Mel bands (200 Hz–7 kHz), log-transformed, outputting 30-dimensional features per frame.  
+4. **Feature sliding window:** 50 consecutive frames stacked to form a **50×30** matrix (approximately 0.5 s of context) as model input.
 
 <p align="center">
   <img src="./assets/preprocessing.png" alt="DSP preprocessing pipeline" width="680"/>
   <br/>
-  <em><strong>Figure 5.</strong> DEEPCRAFT Studio 中的预处理管线配置（与上文四步对应）：双通道 16 kHz 输入 → 帧级滑窗 → Hann 窗 → 频谱分析 → Mel 滤波 → 取对数 → 50×30 特征输出。</em>
+  <em><strong>Figure 5.</strong> Preprocessing pipeline configuration in DEEPCRAFT Studio (corresponding to the four steps above): dual-channel 16 kHz input → frame-level sliding window → Hann window → spectral analysis → Mel filtering → logarithm → 50×30 feature output.</em>
 </p>
 
-### 5. 模型架构设计
+### 5. Model Architecture Design
 
-输入固定为 `[50, 30]` 的 Mel 特征后，模型需在 **识别精度** 与 **开发板算力** 之间取舍。我们采用 DEEPCRAFT 内置的 **`conv1d-small`**：仅约 4,500 参数，可在 CM55 上以 INT8 实时推理。
+With input fixed as `[50, 30]` Mel features, the model must balance **recognition accuracy** against **on-board compute capacity**. We adopt DEEPCRAFT's built-in **`conv1d-small`**: only approximately 4,500 parameters, capable of real-time INT8 inference on CM55.
 
-网络沿 **时间轴** 做一维卷积（50 为时间、30 为频率），比二维卷积更轻量。主体为 4 层 Conv1D，配合池化逐步提取时序模式，最后经全连接层输出五类概率（East / Nord / South / West / unlabeled）。数据量有限，训练中加入 BatchNorm 与 Dropout 抑制过拟合；末端用全局平均池化代替大 Flatten 层，进一步控制参数量。
+The network performs one-dimensional convolution along the **time axis** (50 as time, 30 as frequency), lighter than two-dimensional convolution. The main body consists of 4 Conv1D layers with pooling to progressively extract temporal patterns, followed by a fully connected layer outputting five-class probabilities (East / Nord / South / West / unlabeled). With limited data, BatchNorm and Dropout are added during training to suppress overfitting; global average pooling replaces a large Flatten layer at the end to further control parameter count.
 
 <p align="center">
   <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="580"/>
   <br/>
-  <em><strong>Figure 6.</strong> conv1d-small 结构：输入 [50, 30] → 4 层 Conv1D → 全局池化 → 五分类输出，共 4,512 参数。</em>
+  <em><strong>Figure 6.</strong> conv1d-small architecture: input [50, 30] → 4 Conv1D layers → global pooling → five-class output, 4,512 parameters total.</em>
 </p>
 
-### 6. 训练策略与收敛分析
+### 6. Training Strategy and Convergence Analysis
 
-#### 6.1 超参数配置
+#### 6.1 Hyperparameter Configuration
 
-我们系统性地对比了多个 `conv1d-small` 变体，主要变化维度为数据平衡策略（参数 P）和模型深度。所有实验共享以下基础超参数：
+We systematically compared multiple `conv1d-small` variants, with main variation dimensions being data balancing strategy (parameter P) and model depth. All experiments share the following base hyperparameters:
 
-| 超参数 | 值 | 选择理由 |
-|--------|-----|----------|
-| Batch Size | 4 | 小 batch 引入梯度噪声，有助于小数据集泛化 |
-| Epochs | 10 | 配合 Patience=20 的 early stopping，避免过度训练 |
-| Learning Rate | 0.0003 | DEEPCRAFT 默认值，在 conv1d-small 上收敛稳定 |
-| Weight Decay | 0.001 | L2 正则化，抑制小数据集过拟合 |
-| Class Weights | Shared | 各类别样本量已人工均衡，无需额外加权 |
+| Hyperparameter | Value | Rationale |
+|----------------|-------|-----------|
+| Batch Size | 4 | Small batch introduces gradient noise, aiding generalization on small datasets |
+| Epochs | 10 | Combined with early stopping at Patience=20, avoids over-training |
+| Learning Rate | 0.0003 | DEEPCRAFT default value, stable convergence on conv1d-small |
+| Weight Decay | 0.001 | L2 regularization, suppresses overfitting on small datasets |
+| Class Weights | Shared | Sample counts per class are manually balanced, no additional weighting needed |
 
-#### 6.2 Loss 收敛行为
+#### 6.2 Loss Convergence Behavior
 
-Loss 曲线呈现健康的收敛模式：两条曲线同步下降，Validation Loss 始终低于 Train Loss，说明模型没有过拟合，且在未见数据上泛化良好。Validation Loss 在 epoch 3、6、9 附近出现局部极小值（~0.36），暗示 10 epoch 已足够，继续训练收益有限。
+The loss curves show a healthy convergence pattern: both curves decline in sync, with Validation Loss consistently below Train Loss, indicating the model is not overfitting and generalizes well on unseen data. Validation Loss reaches local minima near epochs 3, 6, and 9 (~0.36), suggesting 10 epochs is sufficient and further training yields limited benefit.
 
 <p align="center">
   <img src="./assets/loss.png" alt="Training and validation loss curves" width="780"/>
   <br/>
-  <em><strong>Figure 8.</strong> 训练与验证 Loss 曲线（10 epochs）。Train Loss 从 0.68 单调降至 0.42；Validation Loss 从 0.50 降至 0.36，且始终低于 Train Loss。</em>
+  <em><strong>Figure 8.</strong> Training and validation loss curves (10 epochs). Train Loss monotonically decreases from 0.68 to 0.42; Validation Loss decreases from 0.50 to 0.36, consistently below Train Loss.</em>
 </p>
 
 
-#### 6.3 Accuracy 收敛行为
+#### 6.3 Accuracy Convergence Behavior
 
-Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4–5 达到 ~84% 后进入平台期，而 Train Accuracy 仍缓慢上升（最终 86.5%），两者差距约 2.5%。这是小数据集上的典型轻微过拟合，在可接受范围内。
+The accuracy curves further validate the above assessment: Validation Accuracy reaches ~84% around epochs 4–5 and then plateaus, while Train Accuracy continues to rise slowly (final 86.5%), with a gap of approximately 2.5%. This is typical mild overfitting on small datasets, within acceptable range.
 
 <p align="center">
   <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="780"/>
   <br/>
-  <em><strong>Figure 9.</strong> 训练与验证 Accuracy 曲线。Train Acc 从 74% 升至 86.5%；Validation Acc 从 76% 升至 ~84%，epoch 4–5 后趋于稳定。</em>
+  <em><strong>Figure 9.</strong> Training and validation accuracy curves. Train Acc rises from 74% to 86.5%; Validation Acc rises from 76% to ~84%, stabilizing after epochs 4–5.</em>
 </p>
 
 
-### 7. 实验结果与模型选择
+### 7. Experimental Results and Model Selection
 
-#### 7.1 训练集评估
+#### 7.1 Training Set Evaluation
 
 
-训练集上模型表现强劲（91.08%），各类别召回率均 > 86%。主要混淆模式为 `unlabeled` 被误判为各方向（4–6%），这是因为背景噪声段中偶尔含有微弱的环境声。
+The model performs strongly on the training set (91.08%), with recall > 86% for all classes. The main confusion pattern is `unlabeled` being misclassified as various directions (4–6%), because background noise segments occasionally contain faint ambient sounds.
 
 <p align="center">
   <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="700"/>
   <br/>
-  <em><strong>Figure 10.</strong> 训练集混淆矩阵：Accuracy = 91.08%, F1 = 91.15%。对角线（绿色）为主，Nord (94.2%) 和 West (94.0%) 识别率最高。</em>
+  <em><strong>Figure 10.</strong> Training set confusion matrix: Accuracy = 91.08%, F1 = 91.15%. Diagonal (green) dominates; Nord (94.2%) and West (94.0%) have the highest recognition rates.</em>
 </p>
 
 
-#### 7.2 测试集评估
+#### 7.2 Test Set Evaluation
 
-测试集准确率 82.50%，低于训练集 91.08%，在小体量数据集上属于正常现象。三个主要发现：
+Test set accuracy is 82.50%, lower than the training set's 91.08%, which is normal for a small dataset. Three main findings:
 
-- **West 最好认（87.3%）：** 声源在西侧时，两路麦克风「一高一低」最明显，模型最容易判断。
-- **East 最容易错（74.5%）：** 常和「无警笛」背景或 West 搞混——东西两侧听起来太像，模型有时分不清。
-- **Nord / South 居中（约 84%）：** 两侧麦克风收到的声音差不多，表现稳定，没有特别突出的误判。
+- **West is easiest to recognize (87.3%):** When the sound source is on the West side, the dual microphones show the most pronounced "one high, one low" pattern, making it easiest for the model to judge.
+- **East is most prone to errors (74.5%):** Often confused with "no siren" background or West — the East and West sides sound too similar, and the model sometimes cannot distinguish them.
+- **Nord / South are in the middle (~84%):** Both microphones receive similar sound levels, with stable performance and no particularly prominent misclassifications.
 
 <p align="center">
   <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="700"/>
   <br/>
-  <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
+  <em><strong>Figure 11.</strong> Test set confusion matrix: Accuracy = 82.50%, F1 = 83.50%. West (87.3%) performs best; East (74.5%) is the main weak direction.</em>
 </p>
 
 
 ---
 
-## 创新点
+## Innovations
 
-### 1. 不使用 Eclipse，运用脚本自动化编译烧录
+### 1. Script-Automated Compile and Flash Without Eclipse
 
-官方文档默认通过 Eclipse ModusToolbox™ IDE 导入工程、点击 Build 和 Program 完成编译烧录。通过仔细观察源代码库，我们发现 `test/` 目录下已包含 ModusToolbox 原生的命令行构建体系，核心文件如下：
+Official documentation defaults to importing the project through the Eclipse ModusToolbox™ IDE and clicking Build and Program to compile and flash. By carefully examining the source repository, we found that the `test/` directory already contains ModusToolbox's native command-line build system, with the following core files:
 
-- **`test/Makefile`** — 顶层 Application Makefile（`MTB_TYPE=APPLICATION`），定义三核子工程 `proj_cm33_s`、`proj_cm33_ns`、`proj_cm55`，并引入 ModusToolbox 的 `application.mk`
-- **`test/common.mk`** — 各子工程共享的配置，指定目标板 `TARGET=APP_KIT_PSE84_AI`、工具链 `TOOLCHAIN=GCC_ARM`、推理核心 `ML_DEEPCRAFT_CPU=cm55` 等
-- **`test/common_app.mk`** — 应用级路径与依赖配置
+- **`test/Makefile`** — Top-level Application Makefile (`MTB_TYPE=APPLICATION`), defining tri-core sub-projects `proj_cm33_s`, `proj_cm33_ns`, `proj_cm55`, and importing ModusToolbox's `application.mk`
+- **`test/common.mk`** — Shared configuration for sub-projects, specifying target board `TARGET=APP_KIT_PSE84_AI`, toolchain `TOOLCHAIN=GCC_ARM`, inference core `ML_DEEPCRAFT_CPU=cm55`, etc.
+- **`test/common_app.mk`** — Application-level path and dependency configuration
 
-这意味着无需打开 Eclipse，直接在终端执行 `make build` 和 `make program` 即可完成与 IDE 等价的编译与烧录。
+This means Eclipse is not required — running `make build` and `make program` directly in the terminal achieves the same compile and flash as the IDE.
 
-基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本。通过运行以下指令即可完成编译与烧录：
+Based on this, we wrote the **`flash_model.sh`** script in the root directory. Running the following command completes compilation and flashing:
 
 ```bash
 ./flash_model.sh
 ```
 
-### 2. Python 工具链
+### 2. Python Toolchain
 
-除 DEEPCRAFT™ Studio 的 GUI 工作流外，我们在 PC 端补充了两个轻量 Python 脚本，分别覆盖 **特征调试** 与 **板端验证** 两个环节，形成「训练 → 导出 → 烧录 → 监听」的完整闭环，无需额外安装串口调试工具或自行解析固件日志。
+Beyond DEEPCRAFT™ Studio's GUI workflow, we supplemented two lightweight Python scripts on the PC side, covering **feature debugging** and **on-board validation** respectively, forming a complete closed loop of "train → export → flash → monitor" without needing additional serial debugging tools or manual firmware log parsing.
 
-#### `model.py` — PC 端复现
+#### `model.py` — PC-Side Reproduction
 
-`model.py` 由 DEEPCRAFT Studio 在导出模型时同步生成，与板端预处理代码保持同一套参数与算子顺序。其主要用途：
+`model.py` is generated synchronously by DEEPCRAFT Studio during model export, maintaining the same parameters and operator order as the on-board preprocessing code. Its main uses:
 
-- **对齐验证：** 在 PC 上用 NumPy 跑通特征提取，确认与 Studio 训练阶段一致。
-- **离线调试：** 无需连接开发板，即可对任意双通道音频片段测试预处理输出形状与数值范围
-- **快速实验：** 可在 Python 侧尝试新的物理特征或数据增强，可先在 `model.py` 基础上迭代，再回写 DEEPCRAFT 工程
+- **Alignment verification:** Run feature extraction with NumPy on PC to confirm consistency with the Studio training phase.
+- **Offline debugging:** Test preprocessing output shape and value range on arbitrary dual-channel audio segments without connecting the development board
+- **Rapid experimentation:** Try new physical features or data augmentation on the Python side; iterate on `model.py` first, then write back to the DEEPCRAFT project
 
-#### `test.py` — 串口实时监听
+#### `test.py` — Real-Time Serial Monitoring
 
-板端固件持续输出推理日志。`test.py` 直接监听该串口流，解析五类分数并在终端单行刷新显示，例如：
+The on-board firmware continuously outputs inference logs. `test.py` directly monitors this serial stream, parses the five-class scores, and displays them with single-line refresh in the terminal, for example:
 
 ```
 Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 ```
 
-使用方式：
-1. 开发板烧录完成后，USB 连接 KitProg3，确认串口设备名（脚本顶部 `PORT` 变量，macOS 为 `/dev/cu.usbmodemXXX`，Windows 为 `COMx`）
-2. 运行 `python test.py`
-3. 播放 `sounds/` 中警笛音源或实机测试，终端即可 **即插即用** 地观察方向预测与各类置信度，无需打开其他软件。
+Usage:
+1. After flashing the development board, connect USB to KitProg3 and confirm the serial device name (the `PORT` variable at the top of the script; macOS: `/dev/cu.usbmodemXXX`, Windows: `COMx`)
+2. Run `python test.py`
+3. Play siren audio from `sounds/` or test in real conditions; the terminal provides **plug-and-play** observation of direction predictions and per-class confidence scores without opening other software.
 
 ---
 
-## 限制与提升点
+## Limitations and Future Improvements
 
-在完成项目的过程中，我们识别出以下 **硬件与算法层面的限制**，以及对应的 **潜在改进方向**：
+During the project, we identified the following **hardware and algorithm-level limitations**, along with corresponding **potential improvement directions**:
 
-1. **双麦克风阵列与方向歧义**
-   - PSOC Edge E84 AI Kit 仅板载双麦克风，信息维度有限；前后方向上双通道波形相近。
-   - 可扩展为 **4 麦克风阵列**（如四边各一），覆盖 360° 方向，并引入垂直或前后维度的相位差。
+1. **Dual-microphone array and directional ambiguity**
+   - The PSOC Edge E84 AI Kit has only two on-board microphones with limited information dimensionality; dual-channel waveforms are similar in the front-back directions.
+   - Can be extended to a **4-microphone array** (e.g., one on each side), covering 360° directions and introducing phase differences in vertical or front-back dimensions.
 
-2. **麦距、板型与物理先验嵌入**
-   - 当前模型未显式利用麦克风间距、PCB 尺寸等物理参数，特征提取偏数据驱动
-   - 将 **麦距、声速、采样率、麦克风坐标** 等作为先验注入特征或网络结构；在特征层融合基于物理量的估计，并对超出阵列分辨率的预测施加物理一致性约束
+2. **Microphone spacing, board form factor, and physical prior embedding**
+   - The current model does not explicitly leverage physical parameters such as microphone spacing and PCB dimensions; feature extraction is predominantly data-driven
+   - Inject **microphone spacing, speed of sound, sample rate, microphone coordinates**, etc. as priors into features or network architecture; fuse physics-based estimates at the feature layer and impose physical consistency constraints on predictions beyond array resolution
 
-3. **数据扩充与场景覆盖**
-   - 若需支持 **更多方向或更细粒度角度**（如8方向），分类边界更复杂，需要 **更大规模、更精确的定向标注数据**
-   - 增大易混淆方向（如 East / West）及边界角度样本采集量
-   - 引入更多 **数据增强**：混响、背景噪声叠加、不同播放距离与角度微调
-   - 采用更多真实警笛录音训练，提升实际场景鲁棒性
+3. **Data augmentation and scene coverage**
+   - To support **more directions or finer-grained angles** (e.g., 8 directions), classification boundaries become more complex, requiring **larger-scale, more precisely labeled directional data**
+   - Increase sample collection for easily confused directions (e.g., East / West) and boundary angles
+   - Introduce more **data augmentation**: reverb, background noise overlay, varying playback distance and angle fine-tuning
+   - Train with more real siren recordings to improve real-world robustness
 
-4. **工具链**
-   - 保留 DEEPCRAFT 部署优势的同时，用 Python 侧做模型搜索与物理特征实验，再导出最优结构至 Studio
+4. **Toolchain**
+   - While retaining DEEPCRAFT deployment advantages, use the Python side for model search and physical feature experiments, then export the optimal architecture to Studio
 
 ---
 
-## 反馈
+## Feedback
 
-以下为我们小组对本项目的整体感受与体会：
+The following reflects our team's overall impressions and takeaways from this project:
 
-这是一次非常值得参与、也很有意思的挑战。本次Challenge的组织非常棒，为选手提供了丰富的食物以及必要的参赛物品。作为 **Informatics 与 Mathematics 背景** 的同学，我们此前几乎没有接触过嵌入式（Embedded）开发，都是第一次亲手走通。整个过程非常锻炼人，也让我们对嵌入式AI的实际落地有了更具体的认识。
+This was a very worthwhile and interesting challenge to participate in. The organization of this Challenge was excellent, providing participants with abundant food and necessary competition supplies. As students with **Informatics and Mathematics backgrounds**, we had virtually no prior exposure to embedded development and were all going through it hands-on for the first time. The entire process was very demanding but also gave us a more concrete understanding of real-world embedded AI deployment.
 
-**上手门槛：** 前期 **ModusToolbox、DEEPCRAFT Studio 等软件的安装与环境调试** 占用了较多时间。如果 Hackathon 官方或后续参与者能提供更细致的安装步骤，上手速度会快很多。
+**Onboarding barrier:** The initial **installation and environment setup of ModusToolbox, DEEPCRAFT Studio, and other software** consumed a significant amount of time. If the Hackathon organizers or future participants could provide more detailed installation steps, the onboarding speed would be much faster.
 
-**工具体验：** DEEPCRAFT Studio 在数据采集和一键部署方面非常友好，但在 **神经网络结构微调与实验迭代** 上，不如直接用 Python（PyTorch / TensorFlow）写代码来得灵活。对于习惯代码驱动 ML 流程的同学，需要一定时间适应其 GUI 工作流。
+**Tool experience:** DEEPCRAFT Studio is very user-friendly for data collection and one-click deployment, but for **neural network architecture fine-tuning and experimental iteration**, it is less flexible than writing code directly in Python (PyTorch / TensorFlow). Students accustomed to code-driven ML workflows need some time to adapt to its GUI workflow.
 
-**总结：** 尽管前期 setup 略为耗时，但总体而言这是一次 **非常值得、收获满满** 的挑战。我们从零完成了一次完整的嵌入式AI的项目，对 Infineon 生态和嵌入式 AI 有了深入理解，也推荐给后续参加类似 Hackathon 的同学。
+**Summary:** Despite the somewhat time-consuming initial setup, overall this was a **very worthwhile and rewarding** challenge. We completed a full embedded AI project from scratch, gained deep understanding of the Infineon ecosystem and embedded AI, and recommend it to students participating in similar Hackathons in the future.
 
 ---

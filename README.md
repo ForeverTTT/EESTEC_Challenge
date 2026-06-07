@@ -1,11 +1,11 @@
 # Emergency Vehicle Direction Detection
 
 
-**基于 Infineon Hackathon Challenge 的扩展实现**
+**Infineon Hackathon Challenge 完整实现**
 
-本项目在 [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) 官方仓库的基础上进行了完整扩展。原始挑战要求使用 PSOC™ Edge E84 AI Kit 的双麦克风阵列，实时判断紧急车辆（警笛/救护车）声源来自 **East（东）、Nord（北）、South（南）、West（西）** 四个方向中的哪一个。
+本项目对应 [Infineon Emergency Vehicle Direction of Arrival Hackathon](https://github.com/Infineon/hackathon) 赛题：使用 PSOC™ Edge E84 AI Kit 的双麦克风阵列，实时判断紧急车辆（警笛/救护车）声源来自 **East（东）、Nord（北）、South（南）、West（西）** 四个方向中的哪一个。
 
-我们在官方示例与 DEEPCRAFT™ Studio 工作流之上，完成了 **数据采集 → 模型微调 → 嵌入式部署 → 实时验证** 的全链路实现，并显著简化了开发流程：无需打开 Eclipse ModusToolbox™ IDE，一条命令即可编译烧录，接上开发板即可运行。
+仓库自包含 **数据采集 → 模型训练 → 嵌入式部署 → 实时验证** 全流程，基于 DEEPCRAFT™ Studio 与 ModusToolbox™ 完成。无需打开 Eclipse IDE，一条命令即可编译烧录，接上开发板即可运行。
 
 ---
 
@@ -16,17 +16,16 @@
 - [运行方式](#运行方式)
 - [训练步骤](#训练步骤)
 - [方法与思路](#方法与思路)
-  - [1. 问题定义与研究动机](#1-问题定义与研究动机)
+  - [1. 问题定义](#1-问题定义)
   - [2. 总体方案](#2-总体方案)
   - [3. 数据采集与标注策略](#3-数据采集与标注策略)
   - [4. 特征工程设计](#4-特征工程设计)
   - [5. 模型架构设计](#5-模型架构设计)
   - [6. 训练策略与收敛分析](#6-训练策略与收敛分析)
   - [7. 实验结果与模型选择](#7-实验结果与模型选择)
-  - [8. 小结](#8-小结)
 - [创新点](#创新点)
-- [反馈](#反馈)
 - [限制与提升点](#限制与提升点)
+- [反馈](#反馈)
 
 ## 项目背景
 
@@ -38,7 +37,7 @@
 | 部署框架 | ModusToolbox™ + TensorFlow Lite for Microcontrollers |
 | 分类任务 | 5 类：East / Nord / South / West / unlabeled |
 
-原始仓库提供了部署示例与 Hackathon 材料，本项目在此基础上增加了：**自采集定向数据、微调 Conv1D 模型、并将完整部署流程脚本化**。
+本仓库提供：**自采集定向数据、Conv1D 模型训练工程、板端部署工程，以及一键烧录与串口监听脚本**。
 
 ---
 
@@ -50,8 +49,8 @@
 EESTEC_Challenge/
 ├── assets/                     # 实验可视化图表（损失曲线、混淆矩阵、数据分布、模型结构等）
 ├── sounds/                     # 警笛/救护车参考音源，用于数据采集时播放
-├── LiveDataCollection/         # DEEPCRAFT 实时数据采集工程（40 条定向录音，每方向 10 条）
-├── finetuned_model/            # DEEPCRAFT 模型训练工程
+├── LiveDataCollection/         # DEEPCRAFT 数据采集工程（40 条定向录音，每方向 10 条，需导入训练工程）
+├── finetuned_model/            # DEEPCRAFT 模型训练工程（导入 LiveDataCollection 数据后训练）
 │   └── Models/<模型名>/        #   训练产出的 .h5 权重
 │       └── Infineon/           #   导出 model.c / model.h
 ├── test/                       # PSOC Edge 嵌入式部署工程（ModusToolbox 三核结构）
@@ -119,7 +118,7 @@ Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 
 ### 1. 问题定义
 
-我们将警笛声源方向判断形式化为五分类任务：在四方位之外增设 unlabeled 类，以区分有方向性警笛与纯背景噪声；方位信息由双麦承载。同时受 PSOC Edge CM55 INT8 量化与低延迟约束，特征维度与网络规模须保持轻量。
+我们将警笛声源方向判断形式化为五分类任务：在四方位之外增设 unlabeled 类，以区分有方向性警笛与纯背景噪声；方位信息主要靠双麦左右响度差体现。同时受 PSOC Edge CM55 INT8 量化与低延迟约束，特征维度与网络规模须保持轻量。
 
 ### 2. 总体方案
 
@@ -130,7 +129,7 @@ flowchart LR
     A["参考音源<br/>sounds/"]
     --> B["定向采集 + Live Labeling<br/>LiveDataCollection/"]
     --> C["特征提取<br/>预处理管线"]
-    --> D["Conv分类网络<br/>finetuned_model/"]
+    --> D["Conv1D 分类网络<br/>finetuned_model/"]
     --> E["部署<br/>test/"]
     --> F["实时输出<br/>test.py"]
 ```
@@ -144,7 +143,7 @@ flowchart LR
 - **硬件：** PSOC™ Edge E84 AI Kit，双 PDM 麦克风阵列固定于开发板
 - **声源：** 单一扬声器作为播放端，开发板位置固定，扬声器依次置于东、北、南、西四个方向
 - **采集方法：** 每方向采集 **10 组** Session，合计 40 条定向录音。其中部分 Session 在 **固定距离** 下完成（10、20、30、40、50、60 cm，按 10 cm 递增）；另有部分 Session 在 **不固定距离** 下采集，由实验者自由调整扬声器与开发板间距，以覆盖近场至中远场及实际使用中的距离波动
-- **信号：** 播放 `sounds/` 中的测试音频，每次播放10-30s不等，用于模拟真实警笛。
+- **信号：** 播放 `sounds/` 中的测试音频，每段 Session 持续约 10–30 s，段内多次重复播放，便于对齐标注且每次内容一致。
 - **工具：** DEEPCRAFT Studio `LiveDataCollection` 工程，PC 麦克风实时录音 + Live Labeling 同步标注
 
 #### 3.2 数据集构成与划分
@@ -254,7 +253,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.1 训练集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="680"/>
+  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="780"/>
   <br/>
   <em><strong>Figure 10.</strong> 训练集混淆矩阵：Accuracy = 91.08%, F1 = 91.15%。对角线（绿色）为主，Nord (94.2%) 和 West (94.0%) 识别率最高。</em>
 </p>
@@ -264,7 +263,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.2 测试集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="680"/>
+  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="780"/>
   <br/>
   <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
 </p>
@@ -274,6 +273,10 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 - **West 最好认（87.3%）：** 声源在西侧时，两路麦克风「一高一低」最明显，模型最容易判断。
 - **East 最容易错（74.5%）：** 常和「无警笛」背景或 West 搞混——东西两侧听起来太像，模型有时分不清。
 - **Nord / South 居中（约 84%）：** 两侧麦克风收到的声音差不多，表现稳定，没有特别突出的误判。
+
+#### 7.3 最终模型选择
+
+综合训练曲线（Figure 8–9）与训练集/测试集混淆矩阵（Figure 10–11），选定 `finetuned_model/` 中训练得到的 **`conv1d-small`** 变体，导出 `model.c` / `model.h` 部署至 `test/proj_cm55/model/`。该模型测试集准确率 82.50%，满足 CM55 INT8 实时推理约束，并已在板端 UART 输出中验证可用。
 
 ---
 

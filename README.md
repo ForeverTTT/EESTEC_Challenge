@@ -1,6 +1,5 @@
-<img src="./img/infineon_logo.png" alt="Infineon Logo" height="50"/>
-
 # Emergency Vehicle Direction Detection
+
 
 **基于 Infineon Hackathon Challenge 的扩展实现**
 

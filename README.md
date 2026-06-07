@@ -294,7 +294,7 @@ Based on this, we wrote the **`flash_model.sh`** script in the root directory. R
 
 ### 2. Python Toolchain
 
-Beyond DEEPCRAFT™ Studio's GUI workflow, we supplemented two lightweight Python scripts on the PC side for **feature debugging** and **on-board validation**, forming a complete closed loop of "train → export → flash → monitor" without needing additional serial debugging tools or manual firmware log parsing.
+Beyond DEEPCRAFT Studio's GUI workflow, we supplemented two lightweight Python scripts on the PC side for **feature debugging** and **on-board validation**, forming a complete closed loop of "train → export → flash → monitor" without needing additional serial debugging tools or manual firmware log parsing.
 
 #### `model.py` — PC-Side Reproduction
 

@@ -13,7 +13,7 @@
 ## 目录
 
 - [项目背景](#项目背景)
-- [新增内容概览](#新增内容概览)
+- [项目结构](#项目结构)
 - [运行方式](#运行方式)
 - [方法与思路](#方法与思路)
   - [1. 问题定义与研究动机](#1-问题定义与研究动机)
@@ -42,19 +42,24 @@
 
 ---
 
-## 新增内容概览
+## 项目结构
 
-在官方 Git 仓库基础上，我们新增了以下目录与文件：
+本仓库目录结构如下：
 
-| 路径 | 类型 | 作用 |
-|------|------|------|
-| `finetuned_model/` | DEEPCRAFT 项目 | 最终选定的微调模型工程（含训练好的 `.h5` 权重及导出配置） |
-| `LiveDataCollection/` | DEEPCRAFT 项目 | 实时数据采集工程，含 40 条定向录音（每方向 10 条） |
-| `sounds/` | 音频资源 | 警笛/救护车参考音源，用于数据采集时播放 |
-| `test/` | 嵌入式工程 | 集成微调模型的 PSOC Edge 部署工程（ModusToolbox 三核结构） |
-| `flash_model.sh` | Shell 脚本 | 一键编译并烧录到开发板 |
-| `model.py` | Python | DEEPCRAFT 导出的预处理管线（Mel 特征提取，可在 PC 端复现） |
-| `test.py` | Python | 串口监听脚本，实时显示板端推理结果 |
+```
+EESTEC_Challenge/
+├── assets/                     # 实验可视化图表（损失曲线、混淆矩阵、数据分布、模型结构等）
+├── sounds/                     # 警笛/救护车参考音源，用于数据采集时播放
+├── LiveDataCollection/         # DEEPCRAFT 实时数据采集工程（40 条定向录音，每方向 10 条）
+├── finetuned_model/            # DEEPCRAFT 模型训练工程
+│   └── Models/<模型名>/        #   训练产出的 .h5 权重
+│       └── Infineon/           #   导出 model.c / model.h
+├── test/                       # PSOC Edge 嵌入式部署工程（ModusToolbox 三核结构）
+│   └── proj_cm55/model/        #   烧录用 model.c / model.h（由 finetuned_model 导出后替换）
+├── flash_model.sh              # 一键编译并烧录到开发板
+├── model.py                    # DEEPCRAFT 导出的 Mel 预处理管线（PC 端复现）
+└── test.py                     # 串口监听脚本，实时显示板端推理结果
+```
 
 ---
 
@@ -334,7 +339,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 ### 3. 完整可复现的数据→模型→部署链路
 
-从 `sounds/` 音源选择、`LiveDataCollection/` 采集、`finetuned_model/` 训练到 `test/` 部署，每个环节均有独立目录与文档，新成员可按 README 完整复现。
+从 `sounds/` 音源选择、`LiveDataCollection/` 采集、`finetuned_model/` 训练到 `test/` 部署，每个环节均有独立目录与文档，可按 README 完整复现。
 
 ---
 
@@ -351,6 +356,8 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
    - 将 **麦距、声速、采样率、麦克风坐标** 等作为先验注入特征或网络结构；在特征层融合基于物理量的估计，并对超出阵列分辨率的预测施加物理一致性约束
 
 3. **数据扩充与场景覆盖**
+   - 若需支持 **更多方向或更细粒度角度**（如8方向），分类边界更复杂，需要 **更大规模、更精确的定向标注数据**
+   - 增大易混淆方向（如 East / West）及边界角度样本采集量
    - 引入 **数据增强**：混响、背景噪声叠加、不同播放距离与角度微调
    - 采用更多真实警笛录音训练，提升实际场景鲁棒性
 
@@ -371,4 +378,5 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 **工具体验：** DEEPCRAFT Studio 在数据采集和一键部署方面非常友好，但在 **神经网络结构微调与实验迭代** 上，不如直接用 Python（PyTorch / TensorFlow）写代码来得灵活。对于习惯代码驱动 ML 流程的同学，需要一定时间适应其 GUI 工作流。
 
 **总结：** 尽管前期 setup 略为耗时，但总体而言这是一次 **非常值得、收获满满** 的挑战。我们从零完成了一次完整的嵌入式AI的项目，对 Infineon 生态和嵌入式 AI 有了深入理解，也推荐给后续参加类似 Hackathon 的同学。
+
 ---

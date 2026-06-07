@@ -14,6 +14,7 @@
 - [项目背景](#项目背景)
 - [项目结构](#项目结构)
 - [运行方式](#运行方式)
+- [训练步骤](#训练步骤)
 - [方法与思路](#方法与思路)
   - [1. 问题定义与研究动机](#1-问题定义与研究动机)
   - [2. 总体方案](#2-总体方案)
@@ -88,9 +89,29 @@ Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 
 4. 播放 `sounds/` 中的警笛音源，从不同方向靠近开发板即可测试
 
-### 3. 重新训练（可选）
+---
 
-用 DEEPCRAFT Studio 打开 `LiveDataCollection/` 采集数据 → 在 `finetuned_model/` 训练 → 导出 C 代码替换 `test/proj_cm55/model/` → 重新执行 `./flash_model.sh`。
+## 训练步骤
+
+如需在已有数据基础上重新训练或微调模型，按以下流程操作：
+
+1. **打开训练工程**  
+   启动 DEEPCRAFT™ Studio，打开本仓库中的 `finetuned_model/` 文件夹。
+
+2. **导入标注数据**  
+   将 `LiveDataCollection/` 中已采集、**已完成 Label 标注** 的定向录音数据导入当前工程。该数据集包含 East / Nord / South / West / unlabeled 五类标签，无需重新标注。
+
+3. **调整模型并训练**  
+   在 Studio 中按需调整网络结构、训练参数与数据划分，启动训练并观察验证集指标，直至模型收敛。
+
+4. **下载训练权重**  
+   训练完成后，在 Studio 中下载模型，获得 `.h5` 权重文件（保存在 `finetuned_model/Models/<模型名>/` 下）。
+
+5. **导出 C 代码**  
+   基于 `.h5` 文件执行代码生成（Code Generation），导出 `model.c` 与 `model.h`（位于 `finetuned_model/Models/<模型名>/Infineon/`）。
+
+6. **替换部署文件并烧录**  
+   将导出的 `model.c` / `model.h` 替换 `test/proj_cm55/model/` 下的同名文件，然后执行 `./flash_model.sh` 重新编译烧录，即可在开发板上验证新模型。
 
 ---
 

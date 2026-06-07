@@ -338,7 +338,7 @@ During the project, we identified the following **hardware and algorithm-level l
    - Train with more real siren recordings to improve real-world robustness.
 
 4. **Toolchain**
-   - While retaining DEEPCRAFT deployment advantages, use the Python side for model search and physical feature experiments, then export the optimal architecture to Studio.
+   - While retaining DEEPCRAFT deployment advantages, use the Python for model search and physical feature experiments, then export the optimal architecture to Studio.
 
 ---
 
@@ -346,12 +346,12 @@ During the project, we identified the following **hardware and algorithm-level l
 
 The following reflects our team's overall impressions and takeaways from this project:
 
-This was a very worthwhile and interesting challenge. The Challenge was very well organized, providing participants with abundant food and necessary competition supplies. As students with Informatics and Mathematics backgrounds, we had no prior experience to embedded development and were all going through it hands-on for the first time. The entire process was very challenging but also gave us a more concrete understanding of real-world embedded AI deployment.
+The Challenge was very well organized, providing participants with abundant food and necessary competition supplies. As students with Informatics and Mathematics backgrounds, we had no prior experience to embedded development and were all going through it hands-on for the first time. The entire process was very challenging but also gave us a more concrete understanding of real-world embedded AI deployment.
 
-**Onboarding barrier:** The installation and environment setup of ModusToolbox, DEEPCRAFT Studio, and other software consumed a significant amount of time. If the Hackathon organizers or future participants could provide more detailed installation steps, onboarding would be much faster.
+**Onboarding barrier:** The installation and environment setup of ModusToolbox, DEEPCRAFT Studio, and other software consumed a significant amount of time. If the organizers could provide more detailed installation steps, onboarding would be much faster.
 
 **Tool experience:** DEEPCRAFT Studio is very user-friendly for data collection and one-click deployment, but for neural network architecture fine-tuning and experimental iteration, it is less flexible than writing code directly in Python (PyTorch / TensorFlow). Students accustomed to code-driven ML workflows need some time to adapt to its GUI workflow.
 
-**Summary:** Despite the somewhat time-consuming initial setup, overall this was a very worthwhile and rewarding challenge. We completed a full embedded AI project from scratch, gained deep understanding of the Infineon ecosystem and embedded AI, and recommend it to students participating in similar Hackathons in the future.
+**Summary:** Despite the time-consuming initial setup, this was a very worthwhile and rewarding challenge. We completed a full embedded AI project from scratch, gained deep understanding of the Infineon ecosystem and embedded AI, and recommend it to students participating in similar Hackathons in the future.
 
 ---

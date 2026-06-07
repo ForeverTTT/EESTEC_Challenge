@@ -139,7 +139,7 @@ flowchart LR
 
 #### 3.1 采集协议
 
-我们在可控实验室环境下完成数据采集：
+我们在以下环境完成数据采集：
 
 - **硬件：** PSOC™ Edge E84 AI Kit，双 PDM 麦克风阵列固定于开发板
 - **声源：** 单一扬声器作为播放端，开发板位置固定，扬声器依次置于东、北、南、西四个方向
@@ -152,7 +152,7 @@ flowchart LR
 按近似 80/10/10 划分为训练集、验证集和测试集，样本量基本均衡。`unlabeled` 类用于捕获无警笛时的环境噪声。
 
 <p align="center">
-  <img src="./assets/data%20split.png" alt="Dataset split statistics" width="900"/>
+  <img src="./assets/data%20split.png" alt="Dataset split statistics" width="680"/>
   <br/>
   <em><strong>Figure 1.</strong> 数据集类别分布与 Train / Validation / Test 划分（DEEPCRAFT Studio Data Explorer）。四个方向类时长均衡（约 02:20–02:31），合计标注数据 09:44，含 unlabeled 共 11:48。</em>
 </p>
@@ -160,24 +160,26 @@ flowchart LR
 
 #### 3.3 各方向采集波形
 
-以下三图展示了 East、Nord、West 方向的典型 Live Labeling Session。可以观察到：每个 Session 包含多个短时脉冲段（对应 Chirp 信标播放），段间为静音间隔；Live Labeling 轨道（蓝色块）与波形中的能量 burst 精确对齐，验证了标注的时序准确性。
+以下三图展示了 East、Nord、West 方向的典型 Live Labeling Session。每个 Session 由多段短促脉冲组成（对应测试音播放），段间为静音；蓝色标注轨道与波形中的能量峰值一一对齐，说明标注准确。
+
+更值得关注的是 **左右声道差异**：开发板双麦沿东西轴向排布，当声源来自 **East 或 West** 时，靠近声源一侧的麦克风波形振幅明显更大，两路通道高低分明，方向特征清晰；而当声源来自 **Nord 或 South** 时，两路麦克风到声源距离相近，左右波形几乎同步、幅度差异很小，方向辨识度明显弱于东西向——这也是后续模型在 East 等方向更易混淆的原因之一。
 
 <p align="center">
-  <img src="./assets/data%20east.png" alt="East direction waveform" width="900"/>
+  <img src="./assets/data%20east.png" alt="East direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 2.</strong> East 方向采集 Session：Local Microphone 波形与 Live Labeling 轨道（"East 100%"）对齐，Session 时长 26.2 s。</em>
+  <em><strong>Figure 2.</strong> East 方向：两路麦克风波形一高一低，靠近声源一侧振幅明显更大；Live Labeling 轨道标注 "East 100%"。</em>
 </p>
 
 <p align="center">
-  <img src="./assets/data%20nord.png" alt="Nord direction waveform" width="900"/>
+  <img src="./assets/data%20nord.png" alt="Nord direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 3.</strong> Nord 方向采集 Session：Chirp 脉冲结构清晰，标注轨道显示 "Nord 100%"。</em>
+  <em><strong>Figure 3.</strong> Nord 方向：两路波形几乎重叠、幅度相当，看不出明显高低差（South 方向表现类似）。</em>
 </p>
 
 <p align="center">
-  <img src="./assets/data%20west.png" alt="West direction waveform" width="900"/>
+  <img src="./assets/data%20west.png" alt="West direction waveform" width="780"/>
   <br/>
-  <em><strong>Figure 4.</strong> West 方向采集 Session：与 East/Nord 采用相同音源与距离，仅改变扬声器物理位置，确保方向差异纯粹来自空间几何而非音源变化。</em>
+  <em><strong>Figure 4.</strong> West 方向：两路波形同样高低分明，但与 East 呈相反的高低关系。</em>
 </p>
 
 ### 4. 特征工程设计
@@ -185,7 +187,7 @@ flowchart LR
 原始双通道 PCM 无法直接输入神经网络。我们采用 DEEPCRAFT Studio 标准的 **Log-Mel 频谱图** 流水线，该管线与 Imagimob 部署框架原生兼容，可自动导出为 Python（`model.py`）和 C（`model.c/.h`）双版本。
 
 <p align="center">
-  <img src="./assets/preprocessing.png" alt="DSP preprocessing pipeline" width="900"/>
+  <img src="./assets/preprocessing.png" alt="DSP preprocessing pipeline" width="680"/>
   <br/>
   <em><strong>Figure 5.</strong> DSP 预处理管线配置：16 kHz 双通道输入 → 帧级滑窗 (512/320) → Hann 窗 → RDFT → Mel 滤波器组 (30 bands, 200–7000 Hz) → Log → 特征级滑窗 (50×30)。</em>
 </p>
@@ -204,7 +206,7 @@ flowchart LR
 在特征维度 `[50, 30]` 固定后，模型选择面临 **精度 vs. 算力** 的权衡。我们选用 DEEPCRAFT 内置的 **`conv1d-small`** 架构——仅 ~4,512 参数，14 层，专为 MCU 端 INT8 推理优化。
 
 <p align="center">
-  <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="900"/>
+  <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="680"/>
   <br/>
   <em><strong>Figure 6.</strong> conv1d-small 网络结构：输入 [50, 30] → 4 层 Conv1D + BatchNorm + MaxPool + Dropout → GlobalAvgPool → Dense [5]。总参数量 4,512。</em>
 </p>
@@ -226,7 +228,7 @@ flowchart LR
 我们系统性地对比了多个 `conv1d-small` 变体，主要变化维度为数据平衡策略（参数 P）和模型深度。所有实验共享以下基础超参数：
 
 <p align="center">
-  <img src="./assets/training%20paras.png" alt="Training hyperparameters" width="900"/>
+  <img src="./assets/training%20paras.png" alt="Training hyperparameters" width="680"/>
   <br/>
   <em><strong>Figure 7.</strong> 训练超参数配置：Batch Size = 4, Split Count = 16, 4 组 conv1d-small 实验（P = 35/45/67/89），Epochs = 10, LR = 0.0003, Weight Decay = 0.001。</em>
 </p>
@@ -242,7 +244,7 @@ flowchart LR
 #### 6.2 Loss 收敛行为
 
 <p align="center">
-  <img src="./assets/loss.png" alt="Training and validation loss curves" width="700"/>
+  <img src="./assets/loss.png" alt="Training and validation loss curves" width="600"/>
   <br/>
   <em><strong>Figure 8.</strong> 训练与验证 Loss 曲线（10 epochs）。Train Loss 从 0.68 单调降至 0.42；Validation Loss 从 0.50 降至 0.36，且始终低于 Train Loss。</em>
 </p>
@@ -252,7 +254,7 @@ Loss 曲线呈现健康的收敛模式：两条曲线同步下降，Validation L
 #### 6.3 Accuracy 收敛行为
 
 <p align="center">
-  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="700"/>
+  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="600"/>
   <br/>
   <em><strong>Figure 9.</strong> 训练与验证 Accuracy 曲线。Train Acc 从 74% 升至 86.5%；Validation Acc 从 76% 升至 ~84%，epoch 4–5 后趋于稳定。</em>
 </p>
@@ -273,7 +275,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.2 训练集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="900"/>
+  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="680"/>
   <br/>
   <em><strong>Figure 10.</strong> 训练集混淆矩阵：Accuracy = 91.08%, F1 = 91.15%。对角线（绿色）为主，Nord (94.2%) 和 West (94.0%) 识别率最高。</em>
 </p>
@@ -283,7 +285,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.3 测试集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="900"/>
+  <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="680"/>
   <br/>
   <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
 </p>

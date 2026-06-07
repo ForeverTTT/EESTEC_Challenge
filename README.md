@@ -241,7 +241,7 @@ Loss 曲线呈现健康的收敛模式：两条曲线同步下降，Validation L
 #### 6.3 Accuracy 收敛行为
 
 <p align="center">
-  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="700"/>
+  <img src="./assets/accuracy.png" alt="Training and validation accuracy curves" width="780"/>
   <br/>
   <em><strong>Figure 9.</strong> 训练与验证 Accuracy 曲线。Train Acc 从 74% 升至 86.5%；Validation Acc 从 76% 升至 ~84%，epoch 4–5 后趋于稳定。</em>
 </p>
@@ -253,7 +253,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 #### 7.1 训练集评估
 
 <p align="center">
-  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="780"/>
+  <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="700"/>
   <br/>
   <em><strong>Figure 10.</strong> 训练集混淆矩阵：Accuracy = 91.08%, F1 = 91.15%。对角线（绿色）为主，Nord (94.2%) 和 West (94.0%) 识别率最高。</em>
 </p>

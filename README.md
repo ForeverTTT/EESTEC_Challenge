@@ -342,7 +342,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 这意味着无需打开 Eclipse，直接在终端执行 `make build` 和 `make program` 即可完成与 IDE 等价的编译与烧录。
 
-基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本，将上述两条 make 命令封装为一键操作。通过运行以下指令即可完成编译与烧录：
+基于此，我们编写了根目录下的 **`flash_model.sh`** 脚本。通过运行以下指令即可完成编译与烧录：
 
 ```bash
 ./flash_model.sh
@@ -350,16 +350,31 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 ### 2. Python 工具链闭环
 
-| 脚本 | 功能 |
-|------|------|
-| `model.py` | PC 端复现预处理，调试特征提取 |
-| `test.py` | 串口监听板端推理，无需额外 GUI |
+除 DEEPCRAFT™ Studio 的 GUI 工作流外，我们在 PC 端补充了两个轻量 Python 脚本，分别覆盖 **特征调试** 与 **板端验证** 两个环节，形成「训练 → 导出 → 烧录 → 监听」的完整闭环，无需额外安装串口调试工具或自行解析固件日志。
 
-接上开发板 → 运行 `python test.py` → 终端实时显示方向预测，**即插即用**。
+#### `model.py` — PC 端复现
 
-### 3. 完整可复现的数据→模型→部署链路
+`model.py` 由 DEEPCRAFT Studio 在导出模型时同步生成，与板端预处理代码保持同一套参数与算子顺序（512 点滑窗 → Hann 窗 → RDFT → Mel 滤波 → Log → 50×30 特征矩阵）。其主要用途：
 
-从 `sounds/` 音源选择、`LiveDataCollection/` 采集、`finetuned_model/` 训练到 `test/` 部署，每个环节均有独立目录与文档，可按 README 完整复现。
+- **对齐验证：** 在 PC 上用 NumPy 跑通特征提取，确认与 Studio 训练阶段一致，排查「训练精度高、板端效果差」类问题
+- **离线调试：** 无需连接开发板，即可对任意双通道音频片段测试预处理输出形状与数值范围
+- **快速实验：** 若后续在 Python 侧尝试新的物理特征或数据增强，可先在 `model.py` 基础上迭代，再回写 DEEPCRAFT 工程
+
+#### `test.py` — 串口实时监听
+
+板端固件持续输出推理日志。`test.py` 直接监听该串口流，解析五类分数并在终端单行刷新显示，例如：
+
+```
+Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
+```
+
+使用方式：
+
+1. 开发板烧录完成后，USB 连接 KitProg3，确认串口设备名（脚本顶部 `PORT` 变量，macOS 为 `/dev/cu.usbmodemXXX`，Windows 为 `COMx`）
+2. 运行 `python test.py`
+3. 播放 `sounds/` 中警笛音源或实机测试，终端即可 **即插即用** 地观察方向预测与各类置信度，无需打开 Serial Monitor 或 DEEPCRAFT Studio
+
+两个脚本均只依赖 Python 标准库（`test.py`）或 NumPy（`model.py`），体量小、无 GUI 依赖，适合在 Hackathon 现场快速演示与排错。
 
 ---
 
@@ -378,12 +393,11 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 3. **数据扩充与场景覆盖**
    - 若需支持 **更多方向或更细粒度角度**（如8方向），分类边界更复杂，需要 **更大规模、更精确的定向标注数据**
    - 增大易混淆方向（如 East / West）及边界角度样本采集量
-   - 引入 **数据增强**：混响、背景噪声叠加、不同播放距离与角度微调
+   - 引入更多 **数据增强**：混响、背景噪声叠加、不同播放距离与角度微调
    - 采用更多真实警笛录音训练，提升实际场景鲁棒性
 
 4. **工具链**
    - 保留 DEEPCRAFT 部署优势的同时，用 Python 侧做模型搜索与物理特征实验，再导出最优结构至 Studio
-   - 完善分步安装与排错文档，降低后续队伍的上手成本
 
 ---
 

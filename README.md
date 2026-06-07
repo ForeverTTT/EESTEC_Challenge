@@ -184,42 +184,30 @@ flowchart LR
 
 ### 4. 特征工程设计
 
-原始双通道 PCM 无法直接输入神经网络。我们采用 DEEPCRAFT Studio 标准的 **Log-Mel 频谱图** 流水线，该管线与 Imagimob 部署框架原生兼容，可自动导出为 Python（`model.py`）和 C（`model.c/.h`）双版本。
+双通道原始波形无法直接输入网络，需先转为 **Log-Mel 频谱图**。流程在 DEEPCRAFT Studio 配置，并同步导出为 `model.py`（PC）与 `model.c` / `model.h`（板端），保证训练与部署一致。
+
+1. **帧级滑窗：** 16 kHz 双通道音频按 512 点/帧、320 点步长切分，约每秒 100 帧。  
+2. **频谱分析：** 每帧加 Hann 窗后做 FFT，合并双麦通道，得到 257 维频率能量。  
+3. **Mel 压缩：** 合并为 30 个 Mel 频带（200 Hz–7 kHz），取对数，每帧输出 30 维特征。  
+4. **特征滑窗：** 连续堆叠 50 帧，得到 **50×30** 矩阵（约 0.5 s 上下文），作为模型输入。
 
 <p align="center">
   <img src="./assets/preprocessing.png" alt="DSP preprocessing pipeline" width="680"/>
   <br/>
-  <em><strong>Figure 5.</strong> DSP 预处理管线配置：16 kHz 双通道输入 → 帧级滑窗 (512/320) → Hann 窗 → RDFT → Mel 滤波器组 (30 bands, 200–7000 Hz) → Log → 特征级滑窗 (50×30)。</em>
+  <em><strong>Figure 5.</strong> DEEPCRAFT Studio 中的预处理管线配置（与上文四步对应）：双通道 16 kHz 输入 → 帧级滑窗 → Hann 窗 → 频谱分析 → Mel 滤波 → 取对数 → 50×30 特征输出。</em>
 </p>
-
-设计思路如下：
-
-1. **帧级滑窗（512 样本, stride 320）：** 在 16 kHz 采样率下，每帧 32 ms，步长 20 ms，输出帧率 100 Hz。这一时间分辨率足以捕获 Chirp 信标的时频结构，同时保持计算量可控。
-2. **Hann 窗 + RDFT：** 加窗后做 512 点实数 FFT，消除频谱泄漏；Frobenius 范数将复数谱转为功率谱。
-3. **Mel 滤波器组（30 带, 200–7000 Hz）：** 将线性频率映射到 Mel 尺度，30 个频带在 200 Hz–7 kHz 范围内均匀分布，覆盖 Chirp 信标的主要能量区间。HTK 公式与 DEEPCRAFT 默认配置一致。
-4. **对数压缩 + 特征级滑窗（50×30）：** 对 Mel 能量取自然对数，再堆叠 50 帧形成 `[50, 30]` 的二维特征矩阵。这相当于 0.5 秒的时间上下文窗口，为 Conv1D 网络提供足够的时序信息以区分方向。
-
-最终每个推理窗口的输入为 **50 帧 × 30 Mel 频带 = 1500 维** 特征向量（reshape 为 `[50, 30]` 矩阵）。
 
 ### 5. 模型架构设计
 
-在特征维度 `[50, 30]` 固定后，模型选择面临 **精度 vs. 算力** 的权衡。我们选用 DEEPCRAFT 内置的 **`conv1d-small`** 架构——仅 ~4,512 参数，14 层，专为 MCU 端 INT8 推理优化。
+输入固定为 `[50, 30]` 的 Mel 特征后，模型需在 **识别精度** 与 **开发板算力** 之间取舍。我们采用 DEEPCRAFT 内置的 **`conv1d-small`**：仅约 4,500 参数，可在 CM55 上以 INT8 实时推理。
+
+网络沿 **时间轴** 做一维卷积（50 为时间、30 为频率），比二维卷积更轻量。主体为 4 层 Conv1D，配合池化逐步提取时序模式，最后经全连接层输出五类概率（East / Nord / South / West / unlabeled）。数据量有限，训练中加入 BatchNorm 与 Dropout 抑制过拟合；末端用全局平均池化代替大 Flatten 层，进一步控制参数量。
 
 <p align="center">
-  <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="680"/>
+  <img src="./assets/model%20architecture.png" alt="Conv1D model architecture" width="580"/>
   <br/>
-  <em><strong>Figure 6.</strong> conv1d-small 网络结构：输入 [50, 30] → 4 层 Conv1D + BatchNorm + MaxPool + Dropout → GlobalAvgPool → Dense [5]。总参数量 4,512。</em>
+  <em><strong>Figure 6.</strong> conv1d-small 结构：输入 [50, 30] → 4 层 Conv1D → 全局池化 → 五分类输出，共 4,512 参数。</em>
 </p>
-
-架构设计 rationale：
-
-| 设计选择 | 理由 |
-|----------|------|
-| 1D 卷积（非 2D） | 特征矩阵 `[50, 30]` 中，50 为时间轴、30 为频率轴；1D 卷积沿时间轴滑动，逐频带提取时序模式，计算量远低于 2D 卷积 |
-| 逐层通道压缩 (30→24→12→24) | 先扩维提取特征、再压缩去冗余，经典 CNN 漏斗结构 |
-| BatchNorm + Dropout | 小数据集（~12 分钟）易过拟合；BN 稳定训练，Dropout 正则化 |
-| Global Average Pooling | 替代 Flatten + 大 FC 层，将参数量从潜在数万降至 125（Dense 层），满足边缘部署 |
-| Softmax 五分类输出 | 直接输出 East / Nord / South / West / unlabeled 的概率分布 |
 
 ### 6. 训练策略与收敛分析
 
@@ -263,16 +251,7 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 ### 7. 实验结果与模型选择
 
-#### 7.1 候选模型对比
-
-| 模型 | 位置 | 说明 |
-|------|------|------|
-| `conv1d-small-balanced-1` | `LiveDataCollection/` | 首次平衡训练 |
-| `conv1d-small-balanced-2` | `test_models/` | 候选 B |
-| `conv1d-small-balanced-3/4` | `test_models/` | 候选 C/D |
-| `conv1d-medium-balanced-1` | `finetuned_model/` | **最终选定** |
-
-#### 7.2 训练集评估
+#### 7.1 训练集评估
 
 <p align="center">
   <img src="./assets/confusion%20metrices_train.png" alt="Training set confusion matrix" width="680"/>
@@ -280,9 +259,9 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
   <em><strong>Figure 10.</strong> 训练集混淆矩阵：Accuracy = 91.08%, F1 = 91.15%。对角线（绿色）为主，Nord (94.2%) 和 West (94.0%) 识别率最高。</em>
 </p>
 
-训练集上模型表现强劲（91.08%），各类别召回率均 > 86%。主要混淆模式为 `unlabeled` 被误判为各方向（4–6%），这是因为背景噪声段中偶尔含有微弱的环境声，与低能量 Chirp 段特征相似。
+训练集上模型表现强劲（91.08%），各类别召回率均 > 86%。主要混淆模式为 `unlabeled` 被误判为各方向（4–6%），这是因为背景噪声段中偶尔含有微弱的环境声。
 
-#### 7.3 测试集评估
+#### 7.2 测试集评估
 
 <p align="center">
   <img src="./assets/confusion%20metrices.png" alt="Test set confusion matrix" width="680"/>
@@ -290,20 +269,11 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
   <em><strong>Figure 11.</strong> 测试集混淆矩阵：Accuracy = 82.50%, F1 = 83.50%。West (87.3%) 表现最好；East (74.5%) 为主要薄弱方向。</em>
 </p>
 
-测试集性能（82.50%）低于训练集（91.08%），符合小数据集（~12 分钟）的预期。关键发现：
+测试集准确率 82.50%，低于训练集 91.08%，在小体量数据集上属于正常现象。三个主要发现：
 
-- **West 方向最优（87.3%）：** 可能与开发板麦克风阵列的几何布局有关——West 方向上的 ITD/ILD 模式最具区分度。
-- **East 方向最弱（74.5%）：** 主要与 `unlabeled`（14.4%）和 West（9.6%）混淆，推测 East 与 West 在双麦阵列上的相位差模式存在近似对称性，导致边界样本难以区分。
-- **Nord / South 居中（~84%）：** 表现稳定，无异常混淆模式。
-
-#### 7.4 最终模型选择
-
-综合训练曲线（Figure 8–9）、训练集/测试集混淆矩阵（Figure 10–11）以及板端实机测试，我们选择 **`conv1d-medium-balanced-1`**（`finetuned_model/`）作为最终部署模型，依据如下：
-
-1. **泛化能力：** Validation Loss 持续下降且无过拟合拐点（Figure 8）
-2. **类别均衡：** 测试集上无单一类别崩溃，最弱方向 East 仍 > 74%（Figure 11）
-3. **部署约束：** ~4.5K 参数，INT8 量化后在 CM55 上实时推理无延迟
-4. **实测验证：** 板端 UART 输出响应迅速，置信度分布合理，`test.py` 可即插即用监控
+- **West 最好认（87.3%）：** 声源在西侧时，两路麦克风「一高一低」最明显，模型最容易判断。
+- **East 最容易错（74.5%）：** 常和「无警笛」背景或 West 搞混——东西两侧听起来太像，模型有时分不清。
+- **Nord / South 居中（约 84%）：** 两侧麦克风收到的声音差不多，表现稳定，没有特别突出的误判。
 
 ---
 

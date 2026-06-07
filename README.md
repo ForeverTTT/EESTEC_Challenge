@@ -354,11 +354,11 @@ Accuracy 曲线进一步验证了上述判断：Validation Accuracy 在 epoch 4�
 
 #### `model.py` — PC 端复现
 
-`model.py` 由 DEEPCRAFT Studio 在导出模型时同步生成，与板端预处理代码保持同一套参数与算子顺序（512 点滑窗 → Hann 窗 → RDFT → Mel 滤波 → Log → 50×30 特征矩阵）。其主要用途：
+`model.py` 由 DEEPCRAFT Studio 在导出模型时同步生成，与板端预处理代码保持同一套参数与算子顺序。其主要用途：
 
-- **对齐验证：** 在 PC 上用 NumPy 跑通特征提取，确认与 Studio 训练阶段一致，排查「训练精度高、板端效果差」类问题
+- **对齐验证：** 在 PC 上用 NumPy 跑通特征提取，确认与 Studio 训练阶段一致。
 - **离线调试：** 无需连接开发板，即可对任意双通道音频片段测试预处理输出形状与数值范围
-- **快速实验：** 若后续在 Python 侧尝试新的物理特征或数据增强，可先在 `model.py` 基础上迭代，再回写 DEEPCRAFT 工程
+- **快速实验：** 可在 Python 侧尝试新的物理特征或数据增强，可先在 `model.py` 基础上迭代，再回写 DEEPCRAFT 工程
 
 #### `test.py` — 串口实时监听
 
@@ -369,12 +369,9 @@ Current: East      | U=0.12 E=0.87 N=0.03 S=0.01 W=0.02
 ```
 
 使用方式：
-
 1. 开发板烧录完成后，USB 连接 KitProg3，确认串口设备名（脚本顶部 `PORT` 变量，macOS 为 `/dev/cu.usbmodemXXX`，Windows 为 `COMx`）
 2. 运行 `python test.py`
-3. 播放 `sounds/` 中警笛音源或实机测试，终端即可 **即插即用** 地观察方向预测与各类置信度，无需打开 Serial Monitor 或 DEEPCRAFT Studio
-
-两个脚本均只依赖 Python 标准库（`test.py`）或 NumPy（`model.py`），体量小、无 GUI 依赖，适合在 Hackathon 现场快速演示与排错。
+3. 播放 `sounds/` 中警笛音源或实机测试，终端即可 **即插即用** 地观察方向预测与各类置信度，无需打开其他软件。
 
 ---
 
